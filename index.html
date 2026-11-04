@@ -1766,7 +1766,7 @@ const HISTORY = [
 ];
 
 function App() {
-  const [msgs, setMsgs] = useState(() => seedConversation());
+  const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
   const [notes, setNotes] = useState(false);
   const [mode, setMode] = useState(() => { try { return localStorage.getItem("color-mode") === "dark" ? "dark" : "light"; } catch (e) { return "light"; } });
@@ -1789,7 +1789,7 @@ function App() {
   }, [openNote]);
   const [dataOpen, setDataOpen] = useState(false);
   const [tab, setTab] = useState("My chats");
-  const [activeChat, setActiveChat] = useState(HISTORY[0][1][0]);
+  const [activeChat, setActiveChat] = useState(null);
   const [synced, setSynced] = useState("4 hours ago");
   const [listen, setListen] = useState(null);
   const [clock, setClock] = useState(0);
@@ -2058,14 +2058,6 @@ function App() {
   <//>`;
 }
 
-function seedConversation() {
-  const q = ENGINE.STARTERS[0];
-  const result = ENGINE.run(q, CARS, null);
-  return [
-    { id: "u0", role: "user", text: q },
-    { id: "a0", role: "assistant", status: "done", result, secs: 5, chars: result.lead.length, time: nowLabel(), tokens: 1247 },
-  ];
-}
 
 ReactDOM.createRoot(document.getElementById("root")).render(html`<${App} />`);
 
