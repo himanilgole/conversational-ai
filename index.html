@@ -1,0 +1,2075 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Northline Conversational AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout from Figma "Table" (1828:12487): 200px product nav | 200px chat history | thread + composer, 550px column. */
+:root {
+  --bg: #F9FAFB; --surface: #FFFFFF; --surface-2: #F2F4F7; --line: #E4E7EC; --line-2: #F2F4F7; --line-strong: #D0D5DD;
+  --fg: #1D2939; --fg-2: #475467; --fg-3: #667085; --fg-4: #98A2B3;
+  --accent: #7F56D9; --accent-strong: #6941C6; --accent-soft: #F4EBFF; --accent-line: #E9D7FE; --accent-mid: #9E77ED;
+  --bubble: #E4E7EC; --send-off: #D0D5DD; --spark: #FEC84B;
+  --nav: #101828; --nav-2: #1D2939; --nav-3: #344054; --nav-fg: #D0D5DD; --nav-hi: #FFFFFF; --nav-on-fg: #E9D7FE;
+  --bad: #D92D20; --bad-soft: #FEF3F2; --note: #FFFAEB; --note-line: #FEC84B; --note-fg: #7A2E0E;
+  --code-bg: #F9FAFB; --k: #6941C6; --s: #067647; --c: #98A2B3;
+  --shadow-sm: 0 4px 8px -2px rgba(16,24,40,.10), 0 2px 4px -2px rgba(16,24,40,.06);
+  --tab-shadow: 0 4px 4px rgba(0,0,0,.12);
+  --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --col: 550px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0C111D; --surface: #161B26; --surface-2: #1F242F; --line: #2A303C; --line-2: #222833; --line-strong: #333A47;
+  --fg: #F5F5F6; --fg-2: #CECFD2; --fg-3: #94969C; --fg-4: #6B6F78;
+  --accent: #9E77ED; --accent-strong: #B692F6; --accent-soft: #2C1C5F; --accent-line: #53389E; --accent-mid: #9E77ED;
+  --bubble: #2A303C; --send-off: #333A47; --spark: #FDB022;
+  --nav: #0A0D14; --nav-2: #161B26; --nav-3: #2A303C;
+  --bad: #F97066; --bad-soft: #3E1A17; --note: #2B2210; --note-line: #B54708; --note-fg: #FEDF89;
+  --code-bg: #0C111D; --k: #B692F6; --s: #47CD89; --c: #6B6F78;
+  --shadow-sm: 0 4px 8px -2px rgba(0,0,0,.4), 0 2px 4px -2px rgba(0,0,0,.3); --tab-shadow: 0 2px 4px rgba(0,0,0,.4);
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0C111D; --surface: #161B26; --surface-2: #1F242F; --line: #2A303C; --line-2: #222833; --line-strong: #333A47;
+  --fg: #F5F5F6; --fg-2: #CECFD2; --fg-3: #94969C; --fg-4: #6B6F78;
+  --accent: #9E77ED; --accent-strong: #B692F6; --accent-soft: #2C1C5F; --accent-line: #53389E; --accent-mid: #9E77ED;
+  --bubble: #2A303C; --send-off: #333A47; --spark: #FDB022;
+  --nav: #0A0D14; --nav-2: #161B26; --nav-3: #2A303C;
+  --bad: #F97066; --bad-soft: #3E1A17; --note: #2B2210; --note-line: #B54708; --note-fg: #FEDF89;
+  --code-bg: #0C111D; --k: #B692F6; --s: #47CD89; --c: #6B6F78;
+  --shadow-sm: 0 4px 8px -2px rgba(0,0,0,.4), 0 2px 4px -2px rgba(0,0,0,.3); --tab-shadow: 0 2px 4px rgba(0,0,0,.4);
+  color-scheme: dark }
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 12px; line-height: 1.2; letter-spacing: -0.02em; -webkit-font-smoothing: antialiased; }
+#root { height: 100%; }
+button { font: inherit; letter-spacing: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.ic { flex: none; display: block; }
+.flip { transform: rotate(180deg); }
+.muted { color: var(--fg-3); }
+.spacer { flex: 1; }
+.app { display: flex; height: 100%; min-height: 0; }
+
+/* ---------- product nav (Sidebar - Main) ---------- */
+.nav { width: 200px; flex: none; background: var(--nav); color: var(--nav-fg); display: flex; flex-direction: column; justify-content: space-between; padding: 20px; overflow-y: auto; border-right: 1px solid var(--nav-3); }
+.nav-top, .nav-foot { display: flex; flex-direction: column; gap: 16px; }
+.brand { height: 24px; display: flex; align-items: center; color: var(--nav-hi); margin-bottom: -8px; }
+.brand.sm { height: auto; margin: 0; color: var(--fg); }
+.logo { display: block; }
+.ws { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 4px; background: var(--nav-2); text-align: left; }
+.ws-av { width: 32px; height: 32px; flex: none; border-radius: 4px; background: var(--nav-3); display: grid; place-items: center; font-size: 12px; font-weight: 600; color: #E4E7EC; }
+.ws-name { color: var(--nav-hi); font-size: 14px; font-weight: 500; line-height: 1.4; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.nav-list a { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 8px; border-radius: 8px; color: var(--nav-fg); text-decoration: none; font-size: 12px; white-space: nowrap; }
+.nav-list a:hover { background: var(--nav-2); color: var(--nav-hi); }
+.nav-list a.on { background: #6941C6; color: var(--nav-on-fg); font-weight: 600; }
+.nav-sep { height: 1px; background: var(--nav-3); }
+.nav-group { display: flex; align-items: center; gap: 8px; padding: 0 8px; font-size: 10px; font-weight: 600; color: var(--nav-fg); margin-bottom: -12px; }
+.trial { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; background: var(--nav-2); color: var(--nav-hi); text-decoration: none; font-size: 12px; line-height: 1.4; }
+.trial span { flex: 1; }
+
+/* ---------- header ---------- */
+.work { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.topbar { height: 58px; flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.seg, .tabs { display: inline-flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 8px; }
+.seg button, .tabs button { padding: 6px 10px; border-radius: 6px; color: var(--fg-2); font-size: 12px; line-height: 1.2; white-space: nowrap; }
+.seg button.on, .tabs button.on { background: var(--surface); color: var(--fg); font-weight: 600; box-shadow: var(--tab-shadow); }
+.mobile-brand { display: none; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
+.top-actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.switch { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; color: var(--fg-2); cursor: pointer; user-select: none; white-space: nowrap; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.track { width: 28px; height: 16px; border-radius: 99px; background: var(--line-strong); position: relative; transition: background .2s; flex: none; }
+.knob { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(16,24,40,.2); transition: transform .2s; }
+.switch input:checked + .track { background: var(--accent); }
+.switch input:checked + .track .knob { transform: translateX(12px); }
+.switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- chat history ---------- */
+.body { flex: 1; min-height: 0; display: flex; }
+.history { width: 200px; flex: none; box-sizing: border-box; border-right: 1px solid var(--line); background: var(--surface); overflow-y: auto; }
+.new-chat { margin: 12px; width: calc(100% - 24px); height: 32px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface); color: #344054; font-size: 14px; font-weight: 600; }
+.new-chat:hover { border-color: var(--accent-mid); color: var(--accent-strong); }
+.h-groups { padding: 16px 12px; display: flex; flex-direction: column; gap: 16px; }
+.h-group { display: flex; flex-direction: column; gap: 8px; padding: 0 12px; }
+.h-group + .h-group { margin-top: 16px; }
+.history > .h-group:first-of-type { margin-top: 16px; }
+.h-label { font-size: 10px; color: var(--fg-4); padding: 0 8px; }
+.h-list { display: flex; flex-direction: column; }
+.h-item { text-align: left; padding: 8px; border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--fg); font-size: 12px; margin-bottom: -2px; }
+.h-item:hover { background: var(--surface-2); }
+.h-item.on { background: var(--accent-soft); color: var(--accent-strong); font-weight: 500; }
+.h-empty { color: var(--fg-3); padding: 0 8px; margin: 0; font-size: 12px; line-height: 1.4; }
+
+/* ---------- thread ---------- */
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; background: var(--bg); }
+.thread { flex: 1; overflow-y: auto; padding: 32px 24px 16px; }
+.thread-in { max-width: var(--col); margin: 0 auto; display: flex; flex-direction: column; gap: 16px; min-height: 100%; justify-content: flex-end; }
+
+.u-row { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.bubble { background: var(--bubble); padding: 12px 16px; border-radius: 12px 12px 2px 12px; max-width: 500px; font-size: 12px; line-height: 1.2; color: var(--fg); }
+.edit-btn { opacity: 0; transition: opacity .15s; }
+.u-row:hover .edit-btn, .edit-btn:focus-visible { opacity: 1; }
+.bubble.editing { width: min(420px, 100%); display: flex; flex-direction: column; gap: 8px; background: var(--surface); border: 1px solid var(--accent-line); }
+.bubble textarea { font: inherit; letter-spacing: inherit; border: 0; resize: none; background: transparent; color: var(--fg); outline: none; }
+.edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* buttons (Figma: 24px tall, 4px radius, 10px semibold) */
+.icon-btn { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 4px; color: var(--fg-3); }
+.icon-btn:hover:not(:disabled) { background: var(--surface-2); color: var(--fg); }
+.icon-btn.flagged { color: var(--bad); background: var(--bad-soft); }
+.ghost-btn { display: inline-flex; align-items: center; gap: 4px; height: 24px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--line); border-radius: 4px; font-weight: 600; font-size: 10px; background: var(--surface); color: var(--fg-2); white-space: nowrap; }
+.ghost-btn:hover { color: var(--fg); border-color: var(--line-strong); }
+.ghost-btn.active { color: var(--accent-strong); border-color: var(--accent-line); background: var(--accent-soft); }
+.topbar .ghost-btn { height: 30px; font-size: 12px; gap: 6px; }
+.primary-btn { height: 24px; padding: 0 12px; border-radius: 4px; background: var(--accent); color: #fff; font-weight: 600; font-size: 10px; }
+.link { color: var(--accent-strong); text-decoration: underline; text-underline-offset: 2px; }
+
+/* answer card */
+.ans-wrap { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px 12px 12px 2px; padding: 16px; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.card.soft { gap: 16px; }
+.ans-head { display: flex; flex-direction: column; gap: 4px; }
+.ans-head h3 { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; text-wrap: balance; }
+.thought { display: flex; align-items: center; gap: 4px; color: var(--fg-3); font-size: 10px; }
+.spark { color: var(--spark); }
+.ans-body { display: flex; flex-direction: column; gap: 8px; margin-top: -8px; }
+.lead { margin: 0; font-size: 12px; line-height: 1.45; max-width: 68ch; }
+.bullets { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.caret { display: inline-block; width: 6px; height: 12px; background: var(--accent); vertical-align: -2px; margin-left: 2px; animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.reveal { display: flex; flex-direction: column; gap: 16px; animation: rise .35s ease-out; min-width: 0; }
+@keyframes rise { from { opacity: .3; transform: translateY(4px); } }
+.seg-row { display: flex; }
+
+/* table */
+.tbl-wrap { border: 1px solid var(--line); border-radius: 4px; overflow: hidden; min-width: 0; margin-bottom: -8px; }
+.tbl-scroll { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 10px; }
+.tbl th { text-align: left; font-weight: 600; padding: 8px; background: var(--bg); border-bottom: 1px solid var(--line-2); white-space: nowrap; color: var(--fg); }
+.tbl td { padding: 8px; border-bottom: 1px solid var(--line-2); white-space: nowrap; background: var(--surface); }
+.tbl .num { text-align: right; }
+.tbl td.primary { font-weight: 600; }
+.tbl td.bad { color: var(--bad); font-weight: 600; }
+.pill { display: inline-block; font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 99px; margin-left: 4px; vertical-align: 1px; }
+.bad-pill { background: var(--bad-soft); color: var(--bad); }
+.pager { display: flex; align-items: center; justify-content: flex-end; gap: 4px; height: 28px; padding: 0 8px; font-size: 10px; font-weight: 600; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.pager .icon-btn { width: 16px; height: 16px; }
+
+/* chart */
+.chart { border: 1px solid var(--line); border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 8px; margin-bottom: -8px; }
+.chart-head { display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: var(--fg); margin-bottom: 4px; }
+.bar-row { display: grid; grid-template-columns: minmax(70px, 150px) 1fr 64px; gap: 8px; align-items: center; font-size: 10px; }
+.bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg-2); }
+.bar-track { height: 16px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.bar { height: 100%; background: var(--accent-line); border-radius: 3px; transform-origin: left; animation: grow .5s cubic-bezier(.2,.7,.2,1) backwards; }
+.bar-lead { background: var(--accent); }
+.bar-bad { background: var(--bad); }
+@keyframes grow { from { transform: scaleX(0); } }
+.bar-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* sql */
+.sql { position: relative; border: 1px solid var(--line); border-radius: 4px; background: var(--code-bg); margin-bottom: -8px; }
+.sql pre { margin: 0; padding: 12px; overflow-x: auto; font-family: var(--mono); font-size: 11px; line-height: 1.6; color: var(--fg); letter-spacing: 0; }
+.sql .k { color: var(--k); font-weight: 500; } .sql .s { color: var(--s); } .sql .c { color: var(--c); font-style: italic; }
+.sql-copy { position: absolute; top: 8px; right: 8px; }
+
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.actions .icon-btn { width: 20px; height: 20px; }
+.how { border: 1px dashed var(--line-strong); border-radius: 4px; padding: 12px; background: var(--bg); display: flex; flex-direction: column; gap: 12px; }
+.how-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; }
+.how p, .how ul { margin: 6px 0 0; color: var(--fg-2); font-size: 11px; line-height: 1.4; }
+.how p { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.how ul { padding-left: 16px; }
+.how li + li { margin-top: 4px; }
+.eyebrow { font-size: 10px; font-weight: 600; color: var(--fg-3); }
+
+.related { display: flex; flex-direction: column; gap: 8px; }
+.related-h { display: flex; align-items: center; gap: 8px; color: var(--fg-3); font-size: 10px; margin-bottom: 4px; }
+.related-q { display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left; padding-top: 8px; border-top: 1px solid var(--line); font-size: 10px; font-weight: 600; color: var(--fg-2); }
+.related-q .ic { color: var(--fg-4); transition: transform .15s; opacity: 0; }
+.related-q:hover { color: var(--accent-strong); }
+.related-q:hover .ic { transform: translateX(2px); color: var(--accent); opacity: 1; }
+.reroll { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; font-size: 10px; color: var(--fg-2); margin-top: 4px; }
+.reroll:hover { color: var(--accent-strong); }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 10px; color: var(--fg-2); }
+.meta span { display: inline-flex; align-items: center; gap: 4px; }
+.flag-meta { color: var(--bad); font-weight: 600; }
+
+/* thinking */
+.thinking { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; color: var(--fg-2); font-weight: 500; padding: 4px 0; }
+.matrix { flex: none; display: block; overflow: visible; }
+.mx-off { fill: var(--line); }
+.mx-on { fill: var(--accent); transition: opacity 80ms linear; filter: drop-shadow(0 0 1.5px var(--accent-line)); }
+.shimmer { background: linear-gradient(90deg, var(--fg-3) 0%, var(--fg) 50%, var(--fg-3) 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shim 1.6s linear infinite; }
+@keyframes shim { to { background-position: -200% 0; } }
+
+/* clarify / empty / unknown */
+.soft-head { display: flex; }
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 16px; }
+.badge.accent { background: var(--accent-soft); color: var(--accent-strong); }
+.choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.choice { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.choice strong { font-size: 12px; font-weight: 600; }
+.choice span { font-size: 10px; color: var(--fg-3); }
+.choice:hover:not(:disabled) { border-color: var(--accent-mid); background: var(--accent-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { padding: 5px 10px; border-radius: 16px; border: 1px solid var(--accent-line); color: var(--accent-strong); background: var(--accent-soft); font-weight: 600; font-size: 10px; text-align: left; }
+.chip:hover { border-color: var(--accent-mid); }
+.chip.quiet { background: var(--surface); border-color: var(--line); color: var(--fg-2); }
+.try-h { font-size: 10px; font-weight: 600; color: var(--fg-3); margin-bottom: -8px; }
+.empty { flex-direction: row; align-items: flex-start; gap: 12px; }
+.empty-ic { width: 32px; height: 32px; border-radius: 8px; background: var(--surface-2); color: var(--fg-3); display: grid; place-items: center; flex: none; }
+.empty-body { display: flex; flex-direction: column; gap: 12px; min-width: 0; flex: 1; }
+.why { margin: -4px 0 0; color: var(--fg-2); font-size: 12px; line-height: 1.45; }
+
+/* welcome */
+.welcome { padding: 24px 0 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: auto; }
+.welcome-ic { width: 36px; height: 36px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+.welcome h2 { margin: 8px 0 0; font-size: 18px; letter-spacing: -0.02em; font-weight: 600; text-wrap: balance; }
+.welcome p { margin: 0; font-size: 12px; line-height: 1.45; }
+.starters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 12px; }
+.starter { display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 12px; font-weight: 500; line-height: 1.3; }
+.starter:hover { border-color: var(--accent-mid); background: var(--accent-soft); }
+.starter .ic { color: var(--fg-4); }
+
+/* composer (Input box) */
+.composer-wrap { padding: 16px 24px 16px; display: flex; flex-direction: column; gap: 16px; max-width: calc(var(--col) + 48px); width: 100%; box-sizing: border-box; margin: 0 auto; }
+.composer { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; padding: 16px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 8px; }
+.composer:focus-within { border-color: var(--accent-mid); box-shadow: var(--shadow-sm), 0 0 0 4px var(--accent-soft); }
+.composer textarea { font: inherit; letter-spacing: inherit; font-size: 12px; line-height: 1.5; height: 36px; border: 0; outline: none; resize: none; background: transparent; color: var(--fg); padding: 0; }
+.composer textarea::placeholder { color: var(--fg-4); }
+.composer-row { display: flex; align-items: center; gap: 16px; }
+.scope { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 16px; background: var(--surface-2); font-size: 10px; color: var(--fg); }
+.scope-ic { color: var(--accent); }
+.send { height: 24px; padding: 0 8px; border-radius: 4px; background: var(--accent); color: #fff; display: grid; place-items: center; }
+.send:disabled { background: var(--send-off); color: #fff; opacity: 1; }
+.disclaimer { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-size: 10px; color: var(--fg-3); }
+.disclaimer p { margin: 0; }
+.sync-row { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.sync { padding: 4px 8px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); font-size: 10px; font-weight: 600; color: var(--fg-3); }
+.sync:hover:not(:disabled) { color: var(--accent-strong); border-color: var(--accent-line); }
+
+/* designer's notes */
+.note { display: flex; gap: 8px; align-items: flex-start; background: var(--note); border: 1px dashed var(--note-line); color: var(--note-fg); border-radius: 8px; padding: 8px 10px; font-size: 11px; line-height: 1.4; letter-spacing: -0.01em; animation: rise .25s ease-out; width: 100%; box-sizing: border-box; }
+.note strong { display: block; font-weight: 600; }
+.note p { margin: 2px 0 0; max-width: 72ch; }
+.note-n { flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--note-fg); color: var(--note); font-size: 9px; font-weight: 700; display: grid; place-items: center; margin-top: 1px; }
+
+/* data modal */
+.scrim { position: fixed; inset: 0; background: rgba(16,24,40,.5); display: grid; place-items: center; padding: 24px 16px; z-index: 20; }
+.modal { background: var(--surface); border-radius: 12px; width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.modal-h { display: flex; justify-content: space-between; gap: 16px; padding: 16px; border-bottom: 1px solid var(--line); }
+.modal-h h3 { margin: 0; display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 13px; letter-spacing: 0; }
+.modal-h p { margin: 4px 0 0; font-size: 11px; line-height: 1.4; }
+.modal-body { overflow: auto; }
+.tbl.dense th { position: sticky; top: 0; font-family: var(--mono); font-weight: 500; letter-spacing: 0; }
+
+.show-sm { display: none !important; }
+@media (max-width: 1100px) { .history { display: none; } }
+@media (max-width: 820px) {
+  .nav { display: none; }
+  .tabs { display: none; }
+  .mobile-brand { display: flex; }
+  .topbar { padding: 10px 16px; }
+  .thread { padding: 20px 16px 12px; }
+  .composer-wrap { padding: 8px 16px 12px; gap: 10px; }
+  .hide-sm { display: none; }
+  .show-sm { display: grid !important; }
+  .choices, .starters, .how-grid { grid-template-columns: 1fr; }
+  .bar-row { grid-template-columns: 84px 1fr 56px; }
+  .bubble { max-width: 88%; }
+  .edit-btn { opacity: 1; }
+}
+@media (max-width: 420px) { .hide-xs { display: none; } .top-actions { gap: 8px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ---------- chat area: roomier reading scale (sidebars and header keep the Figma scale) ---------- */
+.main { --col: 820px; font-size: 14px; line-height: 1.5; letter-spacing: normal; }
+.main .thread-in { gap: 20px; }
+.main .bubble { font-size: 15px; line-height: 1.5; padding: 12px 16px; border-radius: 14px 14px 4px 14px; max-width: 78%; }
+.main .bubble textarea { font-size: 15px; }
+.main .icon-btn { width: 32px; height: 32px; border-radius: 8px; }
+.main .ghost-btn { height: auto; padding: 7px 12px; gap: 6px; font-size: 13px; font-weight: 500; border-radius: 8px; }
+.main .primary-btn { height: auto; padding: 7px 14px; font-size: 13px; border-radius: 8px; }
+.main .card { padding: 24px; gap: 16px; border-radius: 16px; box-shadow: var(--shadow-sm); }
+.main .card.soft { box-shadow: none; }
+.main .ans-head h3 { font-size: 20px; letter-spacing: -0.01em; }
+.main .thought { font-size: 13px; gap: 6px; margin-top: 2px; }
+.main .ans-body { margin-top: 0; gap: 10px; }
+.main .lead { font-size: 15px; line-height: 1.6; }
+.main .bullets { font-size: 15px; line-height: 1.6; padding-left: 20px; }
+.main .caret { width: 7px; height: 16px; vertical-align: -3px; }
+.main .seg { padding: 4px; border-radius: 10px; gap: 2px; }
+.main .seg button { padding: 6px 16px; border-radius: 7px; font-size: 14px; }
+.main .tbl-wrap, .main .chart, .main .sql { border-radius: 12px; margin-bottom: 0; }
+.main .tbl { font-size: 14px; }
+.main .tbl th { font-size: 13px; padding: 10px 16px; color: var(--fg-2); background: var(--surface-2); }
+.main .tbl td { padding: 11px 16px; }
+.main .pill { font-size: 11px; padding: 1px 6px; margin-left: 6px; }
+.main .pager { height: auto; padding: 8px 12px; font-size: 13px; font-weight: 500; color: var(--fg-2); }
+.main .pager .icon-btn { width: 32px; height: 32px; }
+.main .chart { padding: 16px; gap: 10px; }
+.main .chart-head { font-size: 13px; color: var(--fg-2); }
+.main .bar-row { grid-template-columns: minmax(80px, 160px) 1fr 76px; gap: 12px; font-size: 13px; }
+.main .bar-track { height: 20px; border-radius: 5px; }
+.main .bar { border-radius: 5px; }
+.main .sql pre { padding: 16px; font-size: 12.5px; line-height: 1.7; }
+.main .sql-copy { top: 10px; right: 10px; }
+.main .actions .icon-btn { width: 32px; height: 32px; }
+.main .how { padding: 16px; border-radius: 12px; }
+.main .how-grid { gap: 24px; }
+.main .how p, .main .how ul { font-size: 14px; line-height: 1.5; }
+.main .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.main .related { gap: 0; border-top: 1px solid var(--line-2); padding-top: 12px; }
+.main .related-h { font-size: 13px; margin-bottom: 0; padding-bottom: 6px; }
+.main .related-q { padding: 10px 0; border-top: 0; border-bottom: 1px solid var(--line-2); font-size: 14px; font-weight: 500; color: var(--fg); }
+.main .related-q .ic { opacity: 1; }
+.main .reroll { font-size: 13px; gap: 6px; margin-top: 10px; }
+.main .meta { font-size: 12px; gap: 6px 20px; color: var(--fg-3); }
+.main .thinking { font-size: 14px; gap: 12px; }
+.main .badge { font-size: 12px; padding: 4px 10px; gap: 6px; }
+.main .choice { padding: 12px 14px; border-radius: 10px; gap: 2px; }
+.main .choice strong { font-size: 14px; }
+.main .choice span { font-size: 12.5px; }
+.main .chip { padding: 7px 12px; font-size: 13px; font-weight: 500; border-radius: 99px; }
+.main .try-h { font-size: 12px; }
+.main .empty-ic { width: 36px; height: 36px; border-radius: 10px; }
+.main .why { font-size: 14px; line-height: 1.5; margin-top: -6px; }
+.main .welcome { padding-top: 48px; gap: 12px; }
+.main .welcome-ic { width: 44px; height: 44px; border-radius: 12px; }
+.main .welcome h2 { font-size: 24px; }
+.main .welcome p { font-size: 14px; }
+.main .starter { padding: 14px 16px; border-radius: 12px; font-size: 14px; }
+.main .composer-wrap { gap: 8px; padding: 8px 24px 16px; }
+.main .composer { border-radius: 16px; padding: 14px 14px 10px 16px; border-color: var(--line); }
+.main .composer textarea { font-size: 15px; height: auto; min-height: 46px; }
+.main .composer-row { gap: 8px; }
+.main .scope { font-size: 13px; padding: 5px 10px; gap: 6px; border-radius: 99px; font-weight: 500; color: var(--fg-2); }
+.main .send { width: 40px; height: 36px; padding: 0; border-radius: 10px; }
+.main .disclaimer { font-size: 12px; gap: 6px; }
+.main .sync { font-size: 12px; padding: 3px 10px; }
+.main .note { font-size: 13px; line-height: 1.5; padding: 10px 12px; border-radius: 10px; letter-spacing: normal; }
+.main .note-n { width: 20px; height: 20px; font-size: 11px; }
+@media (max-width: 820px) {
+  .main .card { padding: 16px; border-radius: 14px; }
+  .main .bar-row { grid-template-columns: 92px 1fr 64px; gap: 8px; }
+  .main .bubble { max-width: 88%; }
+  .main .composer-wrap { padding: 8px 16px 12px; }
+}
+.main .ghost-btn .ic, .main .thought .ic, .main .related-h .ic, .main .related-q .ic { width: 14px; height: 14px; }
+.main .actions .icon-btn .ic { width: 16px; height: 16px; }
+.main .scope .ic { width: 14px; height: 14px; }
+.main .send .ic { width: 18px; height: 18px; }
+
+/* ---------- app shell scaled to sit beside the 15px chat: 13–14px text, 32–36px targets ---------- */
+.nav { width: 232px; padding: 20px 16px; gap: 24px; }
+.nav-top, .nav-foot { gap: 16px; }
+.brand { height: 28px; padding: 0 8px; margin-bottom: -4px; }
+.logo { width: 38px; height: 18px; }
+.ws { padding: 8px; gap: 10px; border-radius: 8px; }
+.ws-av { width: 32px; height: 32px; border-radius: 6px; font-size: 12px; }
+.ws-name { font-size: 14px; }
+.nav-list { gap: 2px; }
+.nav-list a { height: 34px; padding: 0 10px; gap: 10px; font-size: 13.5px; border-radius: 8px; }
+.nav-list .ic { width: 18px; height: 18px; }
+.nav-group { font-size: 11.5px; padding: 0 10px; margin-bottom: -10px; gap: 8px; color: #98A2B3; }
+.trial { padding: 9px 10px; gap: 10px; font-size: 13.5px; }
+
+.topbar { height: 60px; padding: 12px 20px; }
+.tabs button { padding: 7px 14px; font-size: 13px; }
+.topbar .ghost-btn { height: 34px; padding: 0 12px; font-size: 13px; border-radius: 8px; }
+.topbar .ghost-btn .ic { width: 16px; height: 16px; }
+.switch { font-size: 13px; }
+.track { width: 32px; height: 18px; }
+.knob { width: 14px; height: 14px; }
+.switch input:checked + .track .knob { transform: translateX(14px); }
+
+.history { width: 264px; }
+.new-chat { margin: 16px; width: calc(100% - 32px); height: 38px; border-radius: 8px; font-size: 14px; color: var(--fg); }
+.h-group { padding: 0 12px; gap: 6px; }
+.h-group + .h-group { margin-top: 20px; }
+.history > .h-group:first-of-type { margin-top: 4px; }
+.h-label { font-size: 11.5px; font-weight: 500; padding: 0 10px; color: var(--fg-4); }
+.h-list { gap: 2px; }
+.h-item { padding: 8px 10px; font-size: 13.5px; line-height: 1.4; margin-bottom: 0; color: var(--fg-2); }
+.h-item:hover { color: var(--fg); }
+.h-empty { font-size: 13px; padding: 0 10px; }
+@media (max-width: 1180px) { .history { display: none; } }
+
+/* ---------- voice mode ---------- */
+.orb { display: block; flex: none; border-radius: 50%; }
+.orb-css { background: radial-gradient(circle at 35% 30%, #fff 0, #E3D5FD 28%, #7F56D9 78%); animation: orb-breathe 2.4s ease-in-out infinite; }
+@keyframes orb-breathe { 50% { transform: scale(.9); } }
+.main .icon-btn.mic { color: var(--fg-2); }
+.main .icon-btn.mic:hover:not(:disabled) { color: var(--accent-strong); background: var(--accent-soft); }
+.main .composer.is-listening { border-color: var(--accent-line); box-shadow: var(--shadow-sm), 0 0 0 4px var(--accent-soft); }
+.main .transcript { font-size: 15px; line-height: 1.5; min-height: 46px; color: var(--fg); }
+.transcript .interim { color: var(--fg-3); }
+.transcript .ph { color: var(--fg-4); }
+.transcript .caret { width: 2px; height: 18px; vertical-align: -4px; margin-left: 1px; }
+.capsule { display: inline-flex; align-items: center; gap: 8px; padding: 3px 12px 3px 3px; border-radius: 99px; background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--accent-strong); font-size: 13px; font-weight: 600; min-width: 0; animation: rise .25s ease-out; }
+.cap-time { font-variant-numeric: tabular-nums; color: var(--fg-3); font-weight: 500; }
+.cap-demo { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-3); border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 1px 6px; }
+.voice-hint { font-size: 12px; color: var(--fg-3); white-space: nowrap; }
+.soft-head { gap: 8px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 560px) { .cap-demo, .voice-hint { display: none; } }
+
+/* ---------- logo (1X mark is white; darken it on light surfaces) ---------- */
+:root { --logo-filter: invert(1) brightness(.15); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --logo-filter: none; } }
+:root[data-theme="dark"] { --logo-filter: none; }
+.brand .logo { width: 28px; height: 28px; display: block; }
+.brand.sm .logo { width: 24px; height: 24px; filter: var(--logo-filter); }
+
+/* ---------- how I got this: semantic query chips ---------- */
+.main .how { gap: 16px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-style: solid; }
+.how-sec { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.how-sec ul { margin: 0; padding-left: 18px; color: var(--fg-2); font-size: 14px; line-height: 1.5; }
+.how-sec li + li { margin-top: 4px; }
+.qchips-box { display: flex; flex-direction: column; gap: 10px; }
+.qsentence { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 6px; line-height: 1; }
+.qwrap { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+.qword { color: var(--fg-3); font-size: 13px; }
+.qchip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 8px 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); font-size: 13.5px; font-weight: 500; white-space: nowrap; transition: border-color .12s, background .12s; }
+.qchip:hover { border-color: var(--line-strong); background: var(--surface); }
+.qchip.open { border-color: var(--accent-mid); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-soft); }
+.qchip .ic { color: var(--fg-4); }
+.qchip.metric { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent-strong); font-weight: 600; }
+.qchip.metric .ic { color: var(--accent); }
+.qchip.changed { border-color: var(--accent); background: var(--surface); color: var(--accent-strong); box-shadow: inset 0 0 0 1px var(--accent); }
+.qchip.locked { background: transparent; border-style: dashed; color: var(--fg-2); }
+.qchip.add { border-style: dashed; background: transparent; color: var(--fg-3); padding: 0 10px 0 8px; }
+.qchip.add:hover { color: var(--accent-strong); border-color: var(--accent-mid); }
+.qis { color: var(--fg-3); font-weight: 400; }
+.seal { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; flex: none; }
+.seal .ic { color: #fff !important; }
+.qx { display: grid; place-items: center; width: 18px; height: 18px; margin-left: -2px; border-radius: 4px; color: var(--fg-3); cursor: pointer; }
+.qx:hover { background: var(--line); color: var(--fg); }
+.qhint { margin: 0; font-size: 13px; color: var(--fg-3); line-height: 1.45; }
+.qbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); border: 1px solid var(--accent-line); animation: rise .2s ease-out; }
+.qbar-text { font-size: 13px; color: var(--fg-2); line-height: 1.4; min-width: 0; }
+.qbar-text strong { color: var(--accent-strong); margin-right: 4px; }
+.main .qbar .primary-btn { display: inline-flex; align-items: center; gap: 6px; }
+
+/* popover */
+.pop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 15; width: 240px; max-width: calc(100vw - 48px); max-height: 340px; overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px -8px rgba(16,24,40,.22), 0 2px 6px rgba(16,24,40,.06); padding: 6px; display: flex; flex-direction: column; gap: 2px; line-height: 1.4; white-space: normal; animation: rise .14s ease-out; text-align: left; }
+.pop.wide { width: 320px; }
+.pop-h { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-3); padding: 8px 8px 4px; }
+.pop-note { margin: 0; padding: 4px 8px 8px; font-size: 13px; color: var(--fg-2); }
+.pop .def-meta { padding: 0 8px 8px; }
+.opt-list { display: flex; flex-direction: column; gap: 2px; }
+.opt { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; text-align: left; padding: 7px 8px; border-radius: 8px; font-size: 13.5px; color: var(--fg); }
+.opt:hover { background: var(--surface-2); }
+.opt.on { color: var(--accent-strong); font-weight: 600; }
+.opt.on .ic { color: var(--accent); }
+.opt-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.opt-sub { font-size: 12px; font-weight: 400; color: var(--fg-3); }
+.pop-remove { margin-top: 4px; padding: 8px; border-top: 1px solid var(--line-2); text-align: left; font-size: 13px; color: var(--bad); border-radius: 0 0 8px 8px; }
+.pop-remove:hover { background: var(--bad-soft); }
+.pop-back { display: flex; align-items: center; gap: 4px; padding: 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-3); }
+.pop-back:hover { color: var(--accent-strong); }
+
+/* metric definition card */
+.def { display: flex; flex-direction: column; gap: 6px; padding: 8px 8px 10px; border-bottom: 1px solid var(--line-2); margin-bottom: 2px; }
+.pop.wide > .def:only-child { border-bottom: 0; margin: 0; }
+.def-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.def code { font-family: var(--mono); font-size: 12px; color: var(--fg-2); background: var(--surface-2); padding: 2px 6px; border-radius: 4px; letter-spacing: 0; }
+.def strong { font-size: 14px; }
+.def p { margin: 0; font-size: 13px; color: var(--fg-2); line-height: 1.5; }
+.def-meta { font-size: 12px; color: var(--fg-3); }
+.cert, .uncert { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.cert { background: #ECFDF3; color: #067647; }
+.uncert { background: #FFFAEB; color: #B54708; }
+:root[data-theme="dark"] .cert { background: #053321; color: #75E0A7; }
+:root[data-theme="dark"] .uncert { background: #4E1D09; color: #FEC84B; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cert { background: #053321; color: #75E0A7; } :root:not([data-theme="light"]) .uncert { background: #4E1D09; color: #FEC84B; } }
+
+.sql-link { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-size: 13px; font-weight: 500; color: var(--fg-2); padding-top: 12px; border-top: 1px solid var(--line-2); width: 100%; }
+.sql-link:hover { color: var(--accent-strong); }
+.edited { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin-top: 6px; font-size: 12.5px; color: var(--accent-strong); background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 99px; padding: 3px 10px; }
+@media (max-width: 560px) { .pop, .pop.wide { width: min(300px, calc(100vw - 48px)); } }
+
+/* ---------- design decision hotspots ---------- */
+.hs { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 8px; vertical-align: middle; flex: none; }
+.hs-dot { position: relative; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
+.hs-dot::before { content: ""; position: relative; z-index: 1; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--surface); transition: box-shadow .15s; }
+.hs-dot::after { content: ""; position: absolute; left: 5px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); opacity: 0; animation: hs-ripple 2.2s ease-out infinite; }
+@keyframes hs-ripple { 0% { transform: scale(1); opacity: .5; } 80%, 100% { transform: scale(3); opacity: 0; } }
+.hs-dot:hover::before, .hs-dot.open::before { box-shadow: 0 0 0 2px var(--surface), 0 0 0 5px var(--accent-line); }
+.hs-dot.open::after { animation: none; }
+.hs-tip { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); padding: 5px 8px; border-radius: 6px; background: var(--fg); color: var(--surface); font-size: 12px; font-weight: 500; line-height: 1.2; letter-spacing: normal; text-transform: none; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .12s; z-index: 31; }
+.hs-dot:hover .hs-tip, .hs-dot:focus-visible .hs-tip { opacity: 1; }
+.hs-dot.open .hs-tip { display: none; }
+.hs-pop { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); z-index: 30; width: 300px; max-width: calc(100vw - 32px); box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px; text-align: left; cursor: auto;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 40px -12px rgba(16,24,40,.28), 0 2px 6px rgba(16,24,40,.06);
+  font-size: 13.5px; font-weight: 400; line-height: 1.5; letter-spacing: normal; text-transform: none; color: var(--fg); white-space: normal; animation: rise .16s ease-out; }
+.hs-pop.up { top: auto; bottom: calc(100% + 8px); }
+.hs-pop-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hs-eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--accent-strong); }
+.hs-close { width: 24px; height: 24px; margin: -4px -6px -4px 0; display: grid; place-items: center; border-radius: 6px; color: var(--fg-3); }
+.hs-close:hover { background: var(--surface-2); color: var(--fg); }
+.hs-title { font-size: 14.5px; font-weight: 600; line-height: 1.35; color: var(--fg); }
+.hs-body { color: var(--fg-2); }
+.seg-row { align-items: center; }
+.composer-row > .hs { margin-left: 0; }
+.hs-nav { display: inline-flex; align-items: center; gap: 2px; margin: -4px -6px -4px 0; }
+.hs-btn { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 6px; color: var(--fg-2); }
+.hs-btn:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent-strong); }
+.hs-btn:disabled { opacity: .3; }
+.hs-sep { width: 1px; height: 16px; background: var(--line); margin: 0 4px; }
+
+/* ---------- charts: type picker + forms ---------- */
+:root { --cat-1: #2a78d6; --cat-2: #eb6834; --cat-3: #1baf7a; --cat-4: #eda100; --cat-5: #e87ba4; --cat-6: #008300; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; --cat-5: #d55181; --cat-6: #008300; } }
+:root[data-theme="dark"] { --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; --cat-5: #d55181; --cat-6: #008300; }
+.main .chart { gap: 14px; }
+.main .chart-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; }
+.chart-title { display: flex; align-items: baseline; gap: 10px; font-size: 13px; font-weight: 600; color: var(--fg-2); }
+.chart-title .muted { font-weight: 500; }
+.ct-menu { position: relative; }
+.ct-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 8px 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 13px; font-weight: 500; color: var(--fg); }
+.ct-btn:hover { border-color: var(--line-strong); }
+.ct-btn.open { border-color: var(--accent-mid); box-shadow: 0 0 0 3px var(--accent-soft); }
+.ct-btn > .ic:first-child { color: var(--accent); }
+.ct-btn > .ic:last-child { color: var(--fg-4); }
+.ct-rec-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.pop.ct-pop { left: auto !important; right: 0; width: 290px; max-height: none; }
+.ct-opt { align-items: center; justify-content: flex-start; gap: 10px; }
+.ct-opt > .ic:last-child { margin-left: auto; }
+.ct-opt:disabled { opacity: .45; cursor: not-allowed; }
+.ct-opt:disabled:hover { background: transparent; }
+.ct-ico { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 8px; background: var(--surface-2); color: var(--fg-2); }
+.ct-opt.on .ct-ico { background: var(--accent-soft); color: var(--accent); }
+.ct-name { display: inline-flex; align-items: center; gap: 6px; }
+.ct-rec { display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 600; letter-spacing: .02em; color: var(--accent-strong); background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 99px; padding: 1px 7px; vertical-align: 1px; }
+.chart-note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--fg-3); }
+.chart-note.warn { color: var(--fg-2); }
+.chart-note .ct-rec { margin-right: 4px; }
+.link-btn { color: var(--accent-strong); font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }
+.bars { display: flex; flex-direction: column; gap: 10px; }
+
+.ch-wrap { position: relative; overflow-x: auto; }
+.ch-svg { display: block; width: 100%; min-width: 520px; height: auto; overflow: visible; }
+.ch-svg.radar { min-width: 400px; max-width: 560px; margin: 0 auto; }
+.ch-grid { stroke: var(--line); stroke-width: 1; fill: none; }
+.ch-axis { fill: var(--fg-3); font-size: 12px; font-family: var(--sans); font-variant-numeric: tabular-nums; }
+.ch-axis.hi { fill: var(--fg); font-weight: 600; }
+.ch-axis.faint { fill: var(--fg-4); font-size: 11px; }
+.ch-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ch-area { fill: var(--accent); fill-opacity: .1; stroke: none; }
+.ch-dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; transition: r .12s; cursor: pointer; }
+.ch-cross { stroke: var(--line-strong); stroke-width: 1; }
+.ch-hit { fill: transparent; cursor: pointer; outline: none; }
+.ch-tip { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; gap: 1px; padding: 6px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 6px 16px -6px rgba(16,24,40,.2); pointer-events: none; white-space: nowrap; font-size: 12px; color: var(--fg-3); }
+.ch-tip strong { font-size: 14px; color: var(--fg); font-variant-numeric: tabular-nums; }
+.ch-tip.static { left: 8px; top: 8px; transform: none; }
+
+.dn-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 32px; }
+.dn-svg { width: 210px; height: 210px; flex: none; }
+.dn-seg { cursor: pointer; transition: opacity .15s; outline: none; }
+.dn-seg.dim { opacity: .3; }
+.dn-seg.cat-1, .dn-sw.cat-1 { fill: var(--cat-1); background: var(--cat-1); }
+.dn-seg.cat-2, .dn-sw.cat-2 { fill: var(--cat-2); background: var(--cat-2); }
+.dn-seg.cat-3, .dn-sw.cat-3 { fill: var(--cat-3); background: var(--cat-3); }
+.dn-seg.cat-4, .dn-sw.cat-4 { fill: var(--cat-4); background: var(--cat-4); }
+.dn-seg.cat-5, .dn-sw.cat-5 { fill: var(--cat-5); background: var(--cat-5); }
+.dn-seg.cat-6, .dn-sw.cat-6 { fill: var(--cat-6); background: var(--cat-6); }
+.dn-seg.cat-other, .dn-sw.cat-other { fill: var(--fg-4); background: var(--fg-4); }
+.dn-val { fill: var(--fg); font-size: 22px; font-weight: 600; font-family: var(--sans); }
+.dn-sub { fill: var(--fg-3); font-size: 12px; font-family: var(--sans); }
+.dn-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 220px; }
+.dn-legend li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto 44px; align-items: center; gap: 10px; padding: 5px 8px; border-radius: 6px; font-size: 13.5px; cursor: default; }
+.dn-legend li.on { background: var(--surface-2); }
+.dn-sw { width: 10px; height: 10px; border-radius: 3px; }
+.dn-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg-2); }
+.dn-num { font-weight: 600; font-variant-numeric: tabular-nums; }
+.dn-pct { text-align: right; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+
+.main .chart, .ch-wrap, .dn-wrap { min-width: 0; }
+.dn-legend { min-width: min(220px, 100%); }
+
+/* ---------- decision popovers render at page level, above everything ---------- */
+.hs-pop { position: fixed; transform: none; z-index: 1000; }
+
+/* ---------- collapsible product nav ---------- */
+.nav { transition: width .2s ease, padding .2s ease; overflow-x: hidden; }
+.brand { justify-content: space-between; gap: 8px; }
+.nav-toggle { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; color: #98A2B3; flex: none; }
+.nav-toggle:hover { background: var(--nav-2); color: var(--nav-hi); }
+.nav.min { width: 68px; padding: 20px 12px; }
+.nav.min .brand { flex-direction: column; height: auto; gap: 14px; padding: 0; margin-bottom: 0; }
+.nav.min .nav-label, .nav.min .ws-name, .nav.min .nav-group, .nav.min .trial svg:last-child { display: none; }
+.nav.min .ws { justify-content: center; padding: 6px; }
+.nav.min .nav-list a { justify-content: center; padding: 0; }
+.nav.min .trial { justify-content: center; padding: 8px 0; }
+@media (prefers-reduced-motion: reduce) { .nav { transition: none; } }
+</style>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
+<script>
+const CARS = [{"id":1,"make":"Ford","model":"F-150","variant":"XL 2.7L EcoBoost","fuel_type":"Gasoline","color":"Oxford White","region":"West","manufacturing_price":36100,"selling_price":42100,"quantity_sold":45,"quantity_in_stock":29},{"id":2,"make":"Ford","model":"F-150","variant":"XL 2.7L EcoBoost","fuel_type":"Gasoline","color":"Agate Black","region":"Northeast","manufacturing_price":36600,"selling_price":42800,"quantity_sold":45,"quantity_in_stock":33},{"id":3,"make":"Ford","model":"F-150","variant":"XL 2.7L EcoBoost","fuel_type":"Gasoline","color":"Carbonized Gray","region":"South","manufacturing_price":35800,"selling_price":42100,"quantity_sold":100,"quantity_in_stock":76},{"id":4,"make":"Ford","model":"F-150","variant":"Lariat PowerBoost","fuel_type":"Hybrid","color":"Antimatter Blue","region":"Midwest","manufacturing_price":52700,"selling_price":63500,"quantity_sold":39,"quantity_in_stock":14},{"id":5,"make":"Ford","model":"F-150","variant":"Lariat PowerBoost","fuel_type":"Hybrid","color":"Oxford White","region":"West","manufacturing_price":53800,"selling_price":65900,"quantity_sold":27,"quantity_in_stock":14},{"id":6,"make":"Ford","model":"F-150 Lightning","variant":"Flash","fuel_type":"Electric","color":"Iconic Silver","region":"West","manufacturing_price":58200,"selling_price":64100,"quantity_sold":45,"quantity_in_stock":30},{"id":7,"make":"Ford","model":"F-150 Lightning","variant":"Flash","fuel_type":"Electric","color":"Oxford White","region":"West","manufacturing_price":56800,"selling_price":63000,"quantity_sold":73,"quantity_in_stock":52},{"id":8,"make":"Ford","model":"Mustang Mach-E","variant":"Premium AWD","fuel_type":"Electric","color":"Grabber Blue","region":"Midwest","manufacturing_price":42600,"selling_price":47600,"quantity_sold":11,"quantity_in_stock":7},{"id":9,"make":"Ford","model":"Mustang Mach-E","variant":"Premium AWD","fuel_type":"Electric","color":"Shadow Black","region":"West","manufacturing_price":45200,"selling_price":50800,"quantity_sold":63,"quantity_in_stock":45},{"id":10,"make":"Ford","model":"Escape","variant":"ST-Line Hybrid","fuel_type":"Hybrid","color":"Vapor Blue","region":"Northeast","manufacturing_price":27900,"selling_price":33200,"quantity_sold":50,"quantity_in_stock":22},{"id":11,"make":"Ford","model":"Escape","variant":"ST-Line Hybrid","fuel_type":"Hybrid","color":"Star White","region":"South","manufacturing_price":28800,"selling_price":33500,"quantity_sold":31,"quantity_in_stock":15},{"id":12,"make":"Toyota","model":"Camry","variant":"LE","fuel_type":"Hybrid","color":"Wind Chill Pearl","region":"Midwest","manufacturing_price":23400,"selling_price":29300,"quantity_sold":41,"quantity_in_stock":16},{"id":13,"make":"Toyota","model":"Camry","variant":"LE","fuel_type":"Hybrid","color":"Midnight Black","region":"West","manufacturing_price":24000,"selling_price":29400,"quantity_sold":91,"quantity_in_stock":75},{"id":14,"make":"Toyota","model":"Camry","variant":"LE","fuel_type":"Hybrid","color":"Celestial Silver","region":"Northeast","manufacturing_price":24000,"selling_price":29100,"quantity_sold":45,"quantity_in_stock":24},{"id":15,"make":"Toyota","model":"Camry","variant":"XSE","fuel_type":"Hybrid","color":"Supersonic Red","region":"South","manufacturing_price":28400,"selling_price":36200,"quantity_sold":29,"quantity_in_stock":13},{"id":16,"make":"Toyota","model":"Camry","variant":"XSE","fuel_type":"Hybrid","color":"Midnight Black","region":"Midwest","manufacturing_price":28100,"selling_price":34600,"quantity_sold":30,"quantity_in_stock":20},{"id":17,"make":"Toyota","model":"RAV4","variant":"XLE","fuel_type":"Gasoline","color":"Lunar Rock","region":"West","manufacturing_price":27800,"selling_price":31900,"quantity_sold":31,"quantity_in_stock":20},{"id":18,"make":"Toyota","model":"RAV4","variant":"XLE","fuel_type":"Gasoline","color":"Magnetic Gray","region":"Northeast","manufacturing_price":28200,"selling_price":33500,"quantity_sold":49,"quantity_in_stock":31},{"id":19,"make":"Toyota","model":"RAV4","variant":"Prime XSE","fuel_type":"Plug-in Hybrid","color":"Blueprint","region":"South","manufacturing_price":40500,"selling_price":48700,"quantity_sold":23,"quantity_in_stock":17},{"id":20,"make":"Toyota","model":"RAV4","variant":"Prime XSE","fuel_type":"Plug-in Hybrid","color":"Ice Cap","region":"Midwest","manufacturing_price":41000,"selling_price":49600,"quantity_sold":15,"quantity_in_stock":8},{"id":21,"make":"Toyota","model":"Tacoma","variant":"TRD Off-Road","fuel_type":"Gasoline","color":"Terra","region":"West","manufacturing_price":37200,"selling_price":43700,"quantity_sold":28,"quantity_in_stock":10},{"id":22,"make":"Toyota","model":"Tacoma","variant":"TRD Off-Road","fuel_type":"Gasoline","color":"Underground","region":"Northeast","manufacturing_price":36500,"selling_price":43100,"quantity_sold":32,"quantity_in_stock":17},{"id":23,"make":"Tesla","model":"Model 3","variant":"Long Range AWD","fuel_type":"Electric","color":"Pearl White","region":"South","manufacturing_price":39100,"selling_price":46200,"quantity_sold":24,"quantity_in_stock":13},{"id":24,"make":"Tesla","model":"Model 3","variant":"Long Range AWD","fuel_type":"Electric","color":"Ultra Red","region":"West","manufacturing_price":37000,"selling_price":46200,"quantity_sold":91,"quantity_in_stock":7},{"id":25,"make":"Tesla","model":"Model 3","variant":"Long Range AWD","fuel_type":"Electric","color":"Stealth Grey","region":"West","manufacturing_price":38800,"selling_price":46600,"quantity_sold":72,"quantity_in_stock":6},{"id":26,"make":"Tesla","model":"Model Y","variant":"Long Range AWD","fuel_type":"Electric","color":"Pearl White","region":"Northeast","manufacturing_price":40700,"selling_price":52000,"quantity_sold":64,"quantity_in_stock":38},{"id":27,"make":"Tesla","model":"Model Y","variant":"Long Range AWD","fuel_type":"Electric","color":"Quicksilver","region":"West","manufacturing_price":42300,"selling_price":50700,"quantity_sold":127,"quantity_in_stock":10},{"id":28,"make":"Tesla","model":"Model Y","variant":"Long Range AWD","fuel_type":"Electric","color":"Deep Blue","region":"West","manufacturing_price":43000,"selling_price":51900,"quantity_sold":122,"quantity_in_stock":10},{"id":29,"make":"Chevrolet","model":"Silverado 1500","variant":"LT Duramax","fuel_type":"Diesel","color":"Summit White","region":"South","manufacturing_price":49100,"selling_price":57200,"quantity_sold":52,"quantity_in_stock":18},{"id":30,"make":"Chevrolet","model":"Silverado 1500","variant":"LT Duramax","fuel_type":"Diesel","color":"Black","region":"Midwest","manufacturing_price":46700,"selling_price":55600,"quantity_sold":46,"quantity_in_stock":37},{"id":31,"make":"Chevrolet","model":"Equinox EV","variant":"2LT","fuel_type":"Electric","color":"Riptide Blue","region":"West","manufacturing_price":39700,"selling_price":42000,"quantity_sold":45,"quantity_in_stock":34},{"id":32,"make":"Chevrolet","model":"Equinox EV","variant":"2LT","fuel_type":"Electric","color":"Summit White","region":"West","manufacturing_price":38800,"selling_price":41500,"quantity_sold":55,"quantity_in_stock":29},{"id":33,"make":"Chevrolet","model":"Tahoe","variant":"Z71","fuel_type":"Gasoline","color":"Black","region":"West","manufacturing_price":56800,"selling_price":67900,"quantity_sold":26,"quantity_in_stock":20},{"id":34,"make":"Chevrolet","model":"Tahoe","variant":"Z71","fuel_type":"Gasoline","color":"Sterling Gray","region":"Northeast","manufacturing_price":59400,"selling_price":70800,"quantity_sold":19,"quantity_in_stock":9},{"id":35,"make":"Honda","model":"Civic","variant":"Sport","fuel_type":"Gasoline","color":"Rallye Red","region":"South","manufacturing_price":24100,"selling_price":27500,"quantity_sold":67,"quantity_in_stock":33},{"id":36,"make":"Honda","model":"Civic","variant":"Sport","fuel_type":"Gasoline","color":"Platinum White","region":"Midwest","manufacturing_price":23300,"selling_price":27000,"quantity_sold":59,"quantity_in_stock":51},{"id":37,"make":"Honda","model":"CR-V","variant":"Sport-L Hybrid","fuel_type":"Hybrid","color":"Canyon River Blue","region":"West","manufacturing_price":30600,"selling_price":37900,"quantity_sold":86,"quantity_in_stock":47},{"id":38,"make":"Honda","model":"CR-V","variant":"Sport-L Hybrid","fuel_type":"Hybrid","color":"Crystal Black","region":"Northeast","manufacturing_price":31500,"selling_price":37300,"quantity_sold":47,"quantity_in_stock":21},{"id":39,"make":"Hyundai","model":"Ioniq 5","variant":"SEL AWD","fuel_type":"Electric","color":"Gravity Gold","region":"West","manufacturing_price":44800,"selling_price":48800,"quantity_sold":68,"quantity_in_stock":5},{"id":40,"make":"Hyundai","model":"Ioniq 5","variant":"SEL AWD","fuel_type":"Electric","color":"Cyber Gray","region":"Midwest","manufacturing_price":46000,"selling_price":50400,"quantity_sold":6,"quantity_in_stock":2},{"id":41,"make":"Hyundai","model":"Tucson","variant":"Limited","fuel_type":"Gasoline","color":"Amazon Gray","region":"West","manufacturing_price":34000,"selling_price":39300,"quantity_sold":26,"quantity_in_stock":15},{"id":42,"make":"Hyundai","model":"Tucson","variant":"Limited","fuel_type":"Gasoline","color":"Serenity White","region":"Northeast","manufacturing_price":33000,"selling_price":38000,"quantity_sold":16,"quantity_in_stock":8},{"id":43,"make":"Kia","model":"EV6","variant":"Wind AWD","fuel_type":"Electric","color":"Glacier","region":"West","manufacturing_price":48500,"selling_price":54100,"quantity_sold":33,"quantity_in_stock":28},{"id":44,"make":"Kia","model":"EV6","variant":"Wind AWD","fuel_type":"Electric","color":"Aurora Black","region":"West","manufacturing_price":49400,"selling_price":53800,"quantity_sold":47,"quantity_in_stock":19},{"id":45,"make":"Jeep","model":"Wrangler 4xe","variant":"Sahara","fuel_type":"Plug-in Hybrid","color":"Firecracker Red","region":"West","manufacturing_price":46500,"selling_price":55200,"quantity_sold":33,"quantity_in_stock":26},{"id":46,"make":"Jeep","model":"Wrangler 4xe","variant":"Sahara","fuel_type":"Plug-in Hybrid","color":"Sarge Green","region":"Northeast","manufacturing_price":49900,"selling_price":58500,"quantity_sold":21,"quantity_in_stock":11},{"id":47,"make":"Ram","model":"1500","variant":"Laramie EcoDiesel","fuel_type":"Diesel","color":"Diamond Black","region":"South","manufacturing_price":54000,"selling_price":62300,"quantity_sold":56,"quantity_in_stock":39},{"id":48,"make":"Ram","model":"1500","variant":"Laramie EcoDiesel","fuel_type":"Diesel","color":"Billet Silver","region":"Midwest","manufacturing_price":51700,"selling_price":62200,"quantity_sold":30,"quantity_in_stock":17},{"id":49,"make":"Rivian","model":"R1S","variant":"Dual Motor","fuel_type":"Electric","color":"Rivian Blue","region":"West","manufacturing_price":77500,"selling_price":80100,"quantity_sold":26,"quantity_in_stock":13},{"id":50,"make":"Rivian","model":"R1S","variant":"Dual Motor","fuel_type":"Electric","color":"Glacier White","region":"Northeast","manufacturing_price":74300,"selling_price":76700,"quantity_sold":14,"quantity_in_stock":6},{"id":51,"make":"Honda","model":"CR-V","variant":"Sport-L Hybrid","fuel_type":"Hybrid","color":"Canyon River Blue","region":"Midwest","manufacturing_price":32200,"selling_price":37900,"quantity_sold":44,"quantity_in_stock":26},{"id":52,"make":"Toyota","model":"Camry","variant":"LE","fuel_type":"Hybrid","color":"Celestial Silver","region":"West","manufacturing_price":23700,"selling_price":29700,"quantity_sold":60,"quantity_in_stock":34},{"id":53,"make":"Ford","model":"Escape","variant":"ST-Line Hybrid","fuel_type":"Hybrid","color":"Star White","region":"South","manufacturing_price":29700,"selling_price":35400,"quantity_sold":22,"quantity_in_stock":7},{"id":54,"make":"Ford","model":"Escape","variant":"ST-Line Hybrid","fuel_type":"Hybrid","color":"Star White","region":"West","manufacturing_price":29200,"selling_price":34200,"quantity_sold":41,"quantity_in_stock":14},{"id":55,"make":"Honda","model":"Civic","variant":"Sport","fuel_type":"Gasoline","color":"Rallye Red","region":"Northeast","manufacturing_price":24700,"selling_price":28000,"quantity_sold":25,"quantity_in_stock":16},{"id":56,"make":"Honda","model":"CR-V","variant":"Sport-L Hybrid","fuel_type":"Hybrid","color":"Crystal Black","region":"Northeast","manufacturing_price":31200,"selling_price":37600,"quantity_sold":53,"quantity_in_stock":34},{"id":57,"make":"Ford","model":"F-150","variant":"Lariat PowerBoost","fuel_type":"Hybrid","color":"Antimatter Blue","region":"West","manufacturing_price":56400,"selling_price":66400,"quantity_sold":41,"quantity_in_stock":20},{"id":58,"make":"Honda","model":"CR-V","variant":"Sport-L Hybrid","fuel_type":"Hybrid","color":"Crystal Black","region":"Northeast","manufacturing_price":32200,"selling_price":38800,"quantity_sold":46,"quantity_in_stock":30},{"id":59,"make":"Hyundai","model":"Tucson","variant":"Limited","fuel_type":"Gasoline","color":"Serenity White","region":"Midwest","manufacturing_price":34300,"selling_price":39600,"quantity_sold":27,"quantity_in_stock":16},{"id":60,"make":"Chevrolet","model":"Tahoe","variant":"Z71","fuel_type":"Gasoline","color":"Sterling Gray","region":"Midwest","manufacturing_price":58300,"selling_price":69300,"quantity_sold":33,"quantity_in_stock":19}];
+// ---- Query engine: plain-English question -> structured query -> SQL + result ----
+const FUELS = [
+  { key: "Plug-in Hybrid", re: /\b(plug-?in|phev)s?\b/ },
+  { key: "Electric", re: /\b(electric|evs?|bevs?|battery)\b/ },
+  { key: "Hybrid", re: /\bhybrids?\b/ },
+  { key: "Gasoline", re: /\b(gas|gasoline|petrol|ice)\b/ },
+  { key: "Diesel", re: /\bdiesels?\b/ },
+];
+const REGIONS = ["West", "Northeast", "South", "Midwest"];
+const DIMS = [
+  { key: "region", label: "Region", re: /\b(regions?|regional|areas?|markets?)\b/ },
+  { key: "make", label: "Make", re: /\b(makes?|brands?|manufacturers?|oems?)\b/ },
+  { key: "model", label: "Model", re: /\b(models?|cars?|vehicles?|nameplates?)\b/ },
+  { key: "variant", label: "Variant", re: /\b(variants?|trims?|versions?)\b/ },
+  { key: "fuel_type", label: "Fuel type", re: /\b(fuel|powertrains?|engines?|fuel types?)\b/ },
+  { key: "color", label: "Color", re: /\b(colou?rs?|paints?|shades?)\b/ },
+];
+const METRICS = {
+  revenue: { label: "Revenue", sql: "SUM(selling_price * quantity_sold)", fmt: "usd" },
+  units: { label: "Units sold", sql: "SUM(quantity_sold)", fmt: "int" },
+  profit: { label: "Gross profit", sql: "SUM((selling_price - manufacturing_price) * quantity_sold)", fmt: "usd" },
+  margin: { label: "Gross margin", sql: "SUM((selling_price - manufacturing_price) * quantity_sold) / SUM(selling_price * quantity_sold)", fmt: "pct" },
+  stock: { label: "Units in stock", sql: "SUM(quantity_in_stock)", fmt: "int" },
+  price: { label: "Avg selling price", sql: "AVG(selling_price)", fmt: "usd" },
+};
+
+function fmt(v, kind) {
+  if (kind === "usd") {
+    if (Math.abs(v) >= 1e6) return "$" + (v / 1e6).toFixed(2) + "M";
+    if (Math.abs(v) >= 1e3) return "$" + Math.round(v / 1e3).toLocaleString() + "K";
+    return "$" + Math.round(v).toLocaleString();
+  }
+  if (kind === "pct") return (v * 100).toFixed(1) + "%";
+  if (kind === "weeks") return v >= 99 ? "—" : v.toFixed(1) + " wks";
+  return Math.round(v).toLocaleString();
+}
+
+function parse(q, data, prev) {
+  const s = " " + q.toLowerCase().replace(/[?.!,]/g, " ") + " ";
+  const p = { filters: {}, metric: null, dim: null, top: null, intent: null, raw: q };
+
+  // filters
+  const fuels = [];
+  let rest = s;
+  for (const f of FUELS) { if (f.re.test(rest)) { fuels.push(f.key); rest = rest.replace(f.re, " "); } }
+  if (fuels.length) p.filters.fuel_type = fuels;
+  const regs = REGIONS.filter(r => new RegExp("\\b" + r.toLowerCase() + "(ern)?\\b").test(s));
+  if (regs.length) p.filters.region = regs;
+  const makes = [...new Set(data.map(d => d.make))].filter(m => s.includes(" " + m.toLowerCase()));
+  if (makes.length) p.filters.make = makes;
+  const models = [...new Set(data.map(d => d.model))].filter(m => s.includes(m.toLowerCase()));
+  if (models.length) p.filters.model = models;
+  const colors = [...new Set(data.map(d => d.color))].filter(c => s.includes(c.toLowerCase()));
+  if (colors.length) p.filters.color = colors;
+  const basicColors = ["white","black","red","blue","gray","grey","silver","green","gold"].filter(c => new RegExp("\\b" + c + "\\b").test(s));
+
+  // metric
+  if (/\bmargins?\b/.test(s)) p.metric = "margin";
+  else if (/\b(profit|profitable|earn)/.test(s)) p.metric = "profit";
+  else if (/\b(in stock|inventory|stock levels?|on hand)\b/.test(s)) p.metric = "stock";
+  else if (/\b(units?|volume|how many|quantity|sold|sells?|selling|sellers?)\b/.test(s)) p.metric = "units";
+  else if (/\b(revenue|sales|turnover|money)\b/.test(s)) p.metric = "revenue";
+  else if (/\b(price|cost|expensive|cheap)/.test(s)) p.metric = "price";
+
+  // dimension: "by X", "across X", "per X", "each X", "which X"
+  const dimMatches = DIMS.filter(d => d.re.test(s));
+  const explicit = DIMS.find(d => new RegExp("\\b(by|across|per|each|every|which|what|between|different|compare)\\s+(\\w+\\s+)?" + d.re.source.replace(/\\b/g, "")).test(s));
+  p.dim = (explicit || dimMatches[0] || {}).key || null;
+  if (p.dim === "model" && /\bvariants?\b/.test(s)) p.dim = "variant";
+  if (!p.dim && basicColors.length && /\bcolou?r|white|black|red|blue/.test(s) && !p.filters.color) p.dim = "color";
+
+  const top = s.match(/\btop\s+(\d+)\b/);
+  if (top) p.top = +top[1];
+  else if (/\b(top|best|highest|most|leading)\b/.test(s) && p.dim && p.dim !== "region" && p.dim !== "fuel_type") p.top = 5;
+
+  // intents
+  if (/\b(low stock|running (low|out)|stock ?out|restock|reorder|sell out|selling out|weeks of cover|shortage)\b/.test(s)) p.intent = "lowstock";
+
+  const vague = /\b(best|doing well|performing|performance|good|winners?|top performers?|how are we doing|how.?s it going)\b/.test(s);
+  const isFollowUp = prev && /^\s*(and|what about|how about|now|only|just|same|then|filter|split|break|show (that|it|this))\b/.test(q.toLowerCase());
+
+  if (isFollowUp && !p.intent) {
+    p.followUp = true;
+    p.metric = p.metric || prev.metric;
+    p.dim = p.dim || prev.dim;
+    p.filters = Object.assign({}, prev.filters, p.filters);
+    if (/\b(all|every|remove filter|clear)\b/.test(s)) p.filters = {};
+  }
+
+  if (p.dim && p.filters[p.dim] && p.filters[p.dim].length === 1 && !explicit) { /* keep */ }
+  else if (p.dim && p.filters[p.dim] && p.followUp) delete p.filters[p.dim];
+
+  if (!p.intent) {
+    const recognized = p.metric || p.dim || Object.keys(p.filters).length;
+    if (vague && !p.metric) p.intent = "clarify";
+    else if (!recognized) p.intent = "unknown";
+    else {
+      p.intent = "aggregate";
+      if (!p.metric) p.metric = "revenue";
+      if (!p.dim) p.dim = p.filters.region ? "model" : "region";
+    }
+  }
+  return p;
+}
+
+function applyFilters(data, filters) {
+  return data.filter(r => Object.entries(filters).every(([k, vals]) => vals.includes(r[k])));
+}
+
+function sqlWhere(filters) {
+  const parts = Object.entries(filters).map(([k, v]) =>
+    v.length === 1 ? `${k} = '${v[0]}'` : `${k} IN (${v.map(x => `'${x}'`).join(", ")})`);
+  return parts.length ? "\nWHERE " + parts.join("\n  AND ") : "";
+}
+
+function describeFilters(filters, noRegion) {
+  const bits = [];
+  if (filters.color) bits.push(filters.color.join(" / "));
+  if (filters.fuel_type) bits.push(filters.fuel_type.map(f => f === "Electric" ? "electric" : f.toLowerCase()).join(" and "));
+  if (filters.make) bits.push(filters.make.join(" and "));
+  if (filters.model) bits.push(filters.model.join(" and "));
+  let txt = bits.join(" ");
+  if (filters.region && !noRegion) txt += (txt ? " " : "") + "in the " + filters.region.join(" and ");
+  return txt;
+}
+
+function run(q, data, prev) {
+  return execute(parse(q, data, prev), data);
+}
+
+/* Run a structured (semantic) query directly: used by the parser and by edited query chips. */
+function execute(p, data) {
+  const q = p.raw || "";
+  const t0 = performance.now ? performance.now() : 0;
+
+  if (p.intent === "clarify") {
+    return { kind: "clarify", parsed: p,
+      text: "“Best” can mean a few different things here. Which one do you want me to rank by?",
+      options: [
+        { label: "Revenue", hint: "Selling price × units sold", q: rewrite(q, "revenue") },
+        { label: "Units sold", hint: "Raw volume, ignores price", q: rewrite(q, "units sold") },
+        { label: "Gross margin", hint: "Profit as a share of revenue", q: rewrite(q, "gross margin") },
+      ] };
+  }
+  if (p.intent === "unknown") {
+    return { kind: "unknown", parsed: p,
+      text: "I couldn't map that to the cars table. I can answer questions about revenue, units sold, profit, margin, stock and price, broken down by region, make, model, variant, fuel type or color.",
+      options: STARTERS.slice(0, 3).map(x => ({ label: x, q: x })) };
+  }
+
+  if (p.intent === "lowstock") {
+    const rows = applyFilters(data, p.filters)
+      .map(r => ({ ...r, cover: r.quantity_sold ? r.quantity_in_stock / (r.quantity_sold / 13) : 99 }))
+      .sort((a, b) => a.cover - b.cover).slice(0, p.top || 8);
+    const sql = `-- Compiled by the Northline Sales semantic layer
+-- weeks_of_cover = units in stock ÷ average weekly units sold (13 weeks)
+SELECT make, model, variant, color, region,
+       quantity_in_stock,
+       quantity_sold,
+       ROUND(quantity_in_stock / (quantity_sold / 13.0), 1) AS weeks_of_cover
+FROM cars${sqlWhere(p.filters)}
+ORDER BY weeks_of_cover ASC
+LIMIT ${p.top || 8};`;
+    const critical = rows.filter(r => r.cover < 2);
+    const lead = critical.length
+      ? `${critical.length} vehicle${critical.length > 1 ? "s have" : " has"} less than two weeks of stock left. The tightest is the ${rows[0].make} ${rows[0].model} ${rows[0].variant} in ${rows[0].color} (${rows[0].region}), with ${rows[0].quantity_in_stock} units on hand against ${rows[0].quantity_sold} sold this quarter.`
+      : `Nothing is critically low. The tightest is the ${rows[0].make} ${rows[0].model} at ${fmt(rows[0].cover, "weeks")} of cover.`;
+    return {
+      kind: "answer", parsed: p, title: "Cars at risk of selling out", sql, lead,
+      bullets: rows.slice(0, 4).map(r => `${r.model} ${r.variant}, ${r.color} (${r.region}): ${fmt(r.cover, "weeks")}`),
+      columns: [
+        { key: "label", label: "Vehicle" }, { key: "region", label: "Region" },
+        { key: "quantity_in_stock", label: "In stock", num: true, fmt: "int" },
+        { key: "quantity_sold", label: "Sold (Q3)", num: true, fmt: "int" },
+        { key: "cover", label: "Weeks of cover", num: true, fmt: "weeks", flag: v => v < 2 },
+      ],
+      rows: rows.map(r => ({ ...r, label: `${r.make} ${r.model} ${r.variant} · ${r.color}` })),
+      chart: { key: "cover", fmt: "weeks", label: "Weeks of cover", lowIsBad: true },
+      assumptions: ["Anything under 2 weeks of cover is flagged as critical."],
+      related: [
+        "Compare sales of electric variants across different regions",
+        "What's the gross margin by model for electric cars?",
+        "Which colors sell best in the West?",
+      ],
+      ms: Math.round((performance.now ? performance.now() : 0) - t0),
+    };
+  }
+
+  // aggregate
+  const filtered = applyFilters(data, p.filters);
+  const scope = describeFilters(p.filters);
+  if (!filtered.length) {
+    return { kind: "empty", parsed: p,
+      text: `I didn't find any ${describeFilters(p.filters, true) || "matching"} cars${p.filters.region ? " in the " + p.filters.region.join(" or ") : ""}, so there's nothing to show.`,
+      why: noDataReason(p.filters, data),
+      sql: buildSql(p),
+      options: emptyAlternatives(p) };
+  }
+  const groups = {};
+  for (const r of filtered) {
+    const k = r[p.dim];
+    const g = groups[k] || (groups[k] = { key: k, revenue: 0, units: 0, profit: 0, stock: 0, priceSum: 0, n: 0 });
+    g.revenue += r.selling_price * r.quantity_sold;
+    g.units += r.quantity_sold;
+    g.profit += (r.selling_price - r.manufacturing_price) * r.quantity_sold;
+    g.stock += r.quantity_in_stock;
+    g.priceSum += r.selling_price; g.n++;
+  }
+  let rows = Object.values(groups).map(g => ({ ...g, margin: g.profit / g.revenue, price: g.priceSum / g.n }));
+  rows.sort((a, b) => b[p.metric] - a[p.metric]);
+  const totalGroups = rows.length;
+  if (p.top) rows = rows.slice(0, p.top);
+
+  const m = METRICS[p.metric];
+  const dimLabel = DIMS.find(d => d.key === p.dim).label;
+  const total = rows.reduce((a, r) => a + r[p.metric], 0);
+  const lead0 = rows[0];
+  let lead;
+  if (rows.length === 1) {
+    lead = `${scope ? capital(scope) + ": " : ""}${m.label.toLowerCase()} is ${fmt(lead0[p.metric], m.fmt)} for ${lead0.key}.`;
+  } else if (["revenue", "units", "profit", "stock"].includes(p.metric)) {
+    const share = lead0[p.metric] / rows.reduce((a, r) => a + r[p.metric], 0);
+    const last = rows[rows.length - 1];
+    const noun = describeFilters(p.filters, true);
+    const ratio = lead0[p.metric] / Math.max(last[p.metric], 1);
+    lead = `${lead0.key} leads with ${fmt(lead0[p.metric], m.fmt)}, ${Math.round(share * 100)}% of ${noun ? noun + " " : ""}${m.label.toLowerCase()}${p.filters.region ? " in the " + p.filters.region.join(" and ") : ""}${p.top && totalGroups > rows.length ? " among the top " + rows.length : ""}. ${last.key} is lowest at ${fmt(last[p.metric], m.fmt)}${ratio >= 3 ? `, about ${Math.round(ratio)}× smaller` : ratio >= 1.5 ? ", well behind the leader" : ""}.`;
+  } else {
+    const last = rows[rows.length - 1];
+    lead = `${lead0.key} has the highest ${m.label.toLowerCase()} at ${fmt(lead0[p.metric], m.fmt)}; ${last.key} has the lowest at ${fmt(last[p.metric], m.fmt)}.`;
+  }
+  // story hook: West EV stock
+  if (p.filters.fuel_type && p.filters.fuel_type.includes("Electric") && p.dim === "region") {
+    const w = rows.find(r => r.key === "West");
+    if (w) lead += ` West is also where EV stock is thinnest: ${w.stock} units on hand against ${w.units} sold.`;
+  }
+
+  const cols = [{ key: "key", label: dimLabel }];
+  const order = [p.metric, ...["revenue", "units", "profit", "margin"].filter(x => x !== p.metric)].slice(0, 4);
+  for (const k of order) cols.push({ key: k, label: METRICS[k].label, num: true, fmt: METRICS[k].fmt, primary: k === p.metric });
+
+  const title = `${m.label} by ${dimLabel.toLowerCase()}${scope ? " · " + scope : ""}`;
+  return {
+    kind: "answer", parsed: p, title: capital(title), lead, sql: buildSql(p),
+    bullets: rows.slice(0, 5).map(r => `${r.key}: ${fmt(r[p.metric], m.fmt)}`),
+    columns: cols, rows,
+    chart: { key: p.metric, fmt: m.fmt, label: m.label },
+    assumptions: assumptionsFor(p, filtered.length),
+    related: relatedFor(p, rows),
+  };
+}
+
+function buildSql(p) {
+  const m = METRICS[p.metric || "revenue"];
+  const dim = p.dim || "region";
+  const others = ["revenue", "units", "profit"].filter(k => k !== p.metric).slice(0, 2)
+    .map(k => `       ${METRICS[k].sql} AS ${k}`).join(",\n");
+  return `-- Compiled by the Northline Sales semantic layer
+SELECT ${dim},
+       ${m.sql} AS ${p.metric || "revenue"},
+${others}
+FROM cars${sqlWhere(p.filters)}
+GROUP BY ${dim}
+ORDER BY ${p.metric || "revenue"} DESC${p.top ? "\nLIMIT " + p.top : ""};`;
+}
+
+function assumptionsFor(p, n) {
+  const a = [`Based on ${n} of 60 rows in cars.`];
+  if (p.followUp) a.push("Kept the filters and grouping from your previous question.");
+  if (!p.edited && p.raw && /\bsales\b/i.test(p.raw) && p.metric === "revenue") a.push("I read “sales” as revenue. If you meant units, change the metric chip above.");
+  if (p.edited) a.push("You edited this query directly, so it ran without re-reading your question.");
+  return a;
+}
+
+function relatedFor(p, rows) {
+  const out = [];
+  const top = rows[0] && rows[0].key;
+  if (p.dim === "region" && top) out.push(`Which models drive revenue in the ${top}?`);
+  if (p.dim !== "fuel_type" && !p.filters.fuel_type) out.push(`Break ${METRICS[p.metric].label.toLowerCase()} down by fuel type`);
+  if (p.dim !== "region") out.push(`Now only the West`);
+  if (p.metric !== "margin") out.push(`What's the gross margin by ${p.dim === "region" ? "make" : p.dim.replace("_", " ")}?`);
+  out.push("Which cars are running low on stock?");
+  if (p.dim !== "color") out.push("Which colors sell best?");
+  out.push("Which region has the highest units sold?", "Top 5 models by gross margin", "What's the average selling price by make?");
+  return [...new Set(out)].slice(0, 6);
+}
+
+function noDataReason(filters, data) {
+  if (filters.fuel_type && filters.region) {
+    const where = [...new Set(data.filter(r => filters.fuel_type.includes(r.fuel_type)).map(r => r.region))];
+    if (where.length) return `${filters.fuel_type.join(" / ")} vehicles are only sold in the ${where.join(" and ")} in this dataset.`;
+  }
+  return "The filters you combined don't match any rows.";
+}
+function emptyAlternatives(p) {
+  const out = [];
+  if (p.filters.region) {
+    const f = Object.assign({}, p.filters); delete f.region;
+    out.push({ label: `Show ${describeFilters(f) || "all"} cars across all regions`, q: `Compare ${METRICS[p.metric || "revenue"].label.toLowerCase()} of ${describeFilters(f) || "all"} cars by region` });
+  }
+  out.push({ label: "Revenue by fuel type", q: "What is the total revenue by fuel type?" });
+  return out;
+}
+function rewrite(q, metric) {
+  if (/region/i.test(q)) return `Which region has the highest ${metric}?`;
+  if (/model|car/i.test(q)) return `Top 5 models by ${metric}`;
+  return `Top 5 models by ${metric}`;
+}
+function capital(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+/* The semantic layer the assistant queries. Definitions, owners and certification are what users verify. */
+const SEMANTIC = {
+  view: { name: "Northline Sales", table: "cars", rows: 60, synced: "4 hours ago",
+    description: "Governed view of Northline's vehicle sales and inventory. Every answer is built from its measures and dimensions." },
+  time: { label: "Q3 2026", detail: "Jul 1 – Sep 30, 2026", description: "This dataset holds one quarter of sales, so every answer covers Q3 2026." },
+  measures: {
+    revenue: { id: "total_revenue", label: "Revenue", certified: true, owner: "Finance data team", updated: "Sep 30, 2026",
+      description: "Selling price × units sold, before dealer incentives. Excludes taxes and freight." },
+    units: { id: "units_sold", label: "Units sold", certified: true, owner: "Sales operations", updated: "Sep 30, 2026",
+      description: "Vehicles delivered to customers in the quarter. Excludes demo cars and fleet transfers." },
+    profit: { id: "gross_profit", label: "Gross profit", certified: true, owner: "Finance data team", updated: "Sep 30, 2026",
+      description: "(Selling price − manufacturing price) × units sold. Before incentives and freight." },
+    margin: { id: "gross_margin_pct", label: "Gross margin", certified: true, owner: "Finance data team", updated: "Sep 30, 2026",
+      description: "Gross profit ÷ revenue, weighted by volume." },
+    stock: { id: "units_in_stock", label: "Units in stock", certified: true, owner: "Inventory team", updated: "Sep 30, 2026",
+      description: "Units on dealer lots at the end of the quarter." },
+    price: { id: "avg_selling_price", label: "Avg selling price", certified: false, owner: "Sales operations", updated: "Aug 12, 2026",
+      description: "Simple average of list price per vehicle line. Not weighted by volume, so niche trims count as much as best-sellers." },
+    cover: { id: "weeks_of_cover", label: "Weeks of cover", certified: false, owner: "Inventory team", updated: "Sep 2, 2026",
+      description: "Units in stock ÷ average weekly units sold over the 13-week quarter." },
+  },
+  dimensions: {
+    region: { label: "Region", description: "Sales region: West, Northeast, South or Midwest." },
+    make: { label: "Make", description: "Manufacturer brand, e.g. Ford or Tesla." },
+    model: { label: "Model", description: "Nameplate, e.g. F-150 or Model Y." },
+    variant: { label: "Variant", description: "Trim and powertrain package, e.g. Lariat PowerBoost." },
+    fuel_type: { label: "Fuel type", description: "Gasoline, Hybrid, Plug-in Hybrid, Electric or Diesel." },
+    color: { label: "Color", description: "Manufacturer paint name." },
+  },
+};
+function dimensionValues(data, key) { return [...new Set(data.map(r => r[key]))].sort(); }
+
+const STARTERS = [
+  "Compare sales of electric variants across different regions",
+  "Which cars are running low on stock?",
+  "Which models are doing best?",
+  "Show diesel trucks sold in the West",
+];
+
+const ENGINE = { run, parse, execute, fmt, STARTERS, METRICS, SEMANTIC, dimensionValues };
+if (typeof module !== "undefined") module.exports = ENGINE;
+
+const { useState, useEffect, useRef, useMemo } = React;
+const html = htm.bind(React.createElement);
+/* ---------- Orb: WebGL fluid sphere, after ElevenLabs UI "Orb" (agentState: listening | talking | thinking | null) ---------- */
+const ORB_COLORS = ["#E3D5FD", "#7F56D9"];
+const ORB_FRAG = `
+precision mediump float;
+uniform vec2 uRes; uniform float uTime; uniform float uVol; uniform float uTalk; uniform vec3 uC1; uniform vec3 uC2;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y); }
+float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { v += a * noise(p); p = p * 2.03 + 1.7; a *= 0.5; } return v; }
+void main(){
+  vec2 uv = (gl_FragCoord.xy * 2.0 - uRes) / min(uRes.x, uRes.y);
+  float r = length(uv), ang = atan(uv.y, uv.x);
+  float t = uTime * (0.22 + uVol * 0.8);
+  float edge = 0.9 + 0.045 * uVol * sin(ang * 5.0 + uTime * 7.0) + 0.018 * sin(ang * 3.0 - uTime * 1.8);
+  float mask = 1.0 - smoothstep(edge - 0.035, edge, r);
+  vec2 q = uv * 1.25;
+  q += vec2(fbm(q + t), fbm(q - t + 3.1)) * (0.9 + uVol * 1.3);
+  float n = fbm(q * 1.5 + t * 0.6);
+  vec3 col = mix(uC1, uC2, smoothstep(0.28, 0.78, n));
+  float band = sin((ang + n * 3.2 + t * 1.6) * 2.0) * 0.5 + 0.5;
+  col = mix(col, uC1, band * 0.22);
+  col += uTalk * 0.10 * (sin(r * 16.0 - uTime * 7.0) * 0.5 + 0.5) * (1.0 - r);
+  col += 0.28 * smoothstep(0.85, 0.0, length(uv - vec2(-0.32, 0.38)));
+  col *= 0.86 + 0.14 * (1.0 - r);
+  col = mix(col, vec3(1.0), smoothstep(edge - 0.14, edge, r) * 0.18);
+  gl_FragColor = vec4(col * mask, mask);
+}`;
+const hex3 = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
+
+function Orb({ state = null, volRef, size = 28, colors = ORB_COLORS }) {
+  const canvas = useRef(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const [fallback, setFallback] = useState(false);
+  useEffect(() => {
+    const c = canvas.current;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    c.width = c.height = Math.round(size * dpr);
+    const gl = c.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: true });
+    if (!gl) { setFallback(true); return; }
+    const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, "attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }"));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, ORB_FRAG));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { setFallback(true); return; }
+    gl.useProgram(prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "p");
+    gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const U = n => gl.getUniformLocation(prog, n);
+    gl.uniform2f(U("uRes"), c.width, c.height);
+    gl.uniform3fv(U("uC1"), hex3(colors[0])); gl.uniform3fv(U("uC2"), hex3(colors[1]));
+    gl.viewport(0, 0, c.width, c.height);
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let raf, vol = 0, talk = 0, t0 = performance.now();
+    const frame = now => {
+      const st = stateRef.current;
+      const target = volRef && volRef.current ? volRef.current.value : 0;
+      vol += (target - vol) * 0.18;
+      talk += ((st === "talking" ? 1 : 0) - talk) * 0.08;
+      const time = reduce ? 1.5 : (now - t0) / 1000;
+      gl.uniform1f(U("uTime"), time); gl.uniform1f(U("uVol"), reduce ? 0 : vol); gl.uniform1f(U("uTalk"), talk);
+      gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      if (!reduce) raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => { cancelAnimationFrame(raf); const ext = gl.getExtension("WEBGL_lose_context"); if (ext) ext.loseContext(); };
+  }, [size]);
+  if (fallback) return html`<span className=${"orb orb-css" + (state ? " " + state : "")} style=${{ width: size, height: size }} aria-hidden="true"></span>`;
+  return html`<canvas ref=${canvas} className="orb" style=${{ width: size, height: size }} aria-hidden="true"></canvas>`;
+}
+
+/* ---------- simulated audio levels ---------- */
+function useLevel() {
+  const ref = useRef({ value: 0 });
+  useEffect(() => {
+    let raf;
+    const decay = () => { ref.current.value *= 0.9; raf = requestAnimationFrame(decay); };
+    raf = requestAnimationFrame(decay);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  const pulse = (min = 0.45, max = 1) => { ref.current.value = min + Math.random() * (max - min); };
+  return [ref, pulse];
+}
+
+
+
+/* ---------- icons ---------- */
+const P = {
+  sparkle: "M12 3l1.8 4.9L19 9.7l-5.2 1.8L12 16.5l-1.8-5L5 9.7l5.2-1.8L12 3zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z",
+  edit: "M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4",
+  flag: "M5 21V4h11l-1.5 4L16 12H5",
+  retry: "M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7",
+  copy: "M9 9h11v11H9zM5 15H4V4h11v1",
+  send: "M12 19V5M5 12l7-7 7 7",
+  chev: "M9 6l6 6-6 6",
+  chevL: "M15 6l-6 6 6 6",
+  down: "M6 9l6 6 6-6",
+  db: "M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3",
+  chat: "M4 5h16v11H9l-5 4V5z",
+  plug: "M9 3v5M15 3v5M6 8h12v4a6 6 0 0 1-12 0V8zM12 18v3",
+  code: "M3 5h18v14H3zM7 10l3 2-3 2M12 15h5",
+  jobs: "M4 6h6v4H4zM14 4h6v6h-6zM14 14h6v6h-6zM10 8h2v9h2",
+  cube: "M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM12 12l8-4.5M12 12v9M12 12L4 7.5",
+  bar: "M4 20h16M7 20v-6M12 20V8M17 20v-10",
+  grid: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
+  gear: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 15.4H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9.6 4.6V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5.9z",
+  help: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01",
+  note: "M5 4h14v16H5zM9 9h6M9 13h6M9 17h3",
+  x: "M6 6l12 12M18 6L6 18",
+  info: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v6M12 7.5v.01",
+  search: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4",
+  plus: "M12 5v14M5 12h14",
+  expand: "M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7",
+  list: "M8 6h12M8 12h12M8 18h12M4 6v.01M4 12v.01M4 18v.01",
+  check: "M5 12l5 5 9-10",
+  panelClose: "M4 5h16v14H4zM9.5 5v14M15.5 9.5L13 12l2.5 2.5",
+  panelOpen: "M4 5h16v14H4zM9.5 5v14M13 9.5l2.5 2.5-2.5 2.5",
+  lock: "M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3",
+  mic: "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21",
+  speaker: "M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4zM15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11",
+  stop: "M8 8h8v8H8z",
+  tree: "M6 4v13a2 2 0 0 0 2 2h4M6 9h6M14 7h6v4h-6zM14 17h6v4h-6z",
+  gauge: "M12 14l5-5M4.6 17a8.5 8.5 0 1 1 14.8 0z",
+  dice: "M4 4h16v16H4zM8.5 8.5h.01M12 12h.01M15.5 15.5h.01",
+  arrowR: "M5 12h14M13 6l6 6-6 6",
+  caret: "M6 9l6 6 6-6",
+};
+const Icon = ({ n, s = 16, className = "" }) => html`<svg className=${"ic " + className} width=${s} height=${s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d=${P[n]} /></svg>`;
+
+const FIG_NAV = {"Ingestion": ["M9 4L11.5 1.5", "M14.5 4.5L12 7", "M14 9L7 2", "M13.25 8.25L9.58564 11.9144C9.21057 12.2894 8.70193 12.5 8.17157 12.5C7.64121 12.5 7.13257 12.2894 6.75751 11.9144L4.08564 9.2425C3.71066 8.86744 3.5 8.3588 3.5 7.82844C3.5 7.29808 3.71066 6.78944 4.08564 6.41437L7.75001 2.75", "M5.42188 10.5781L2 14"], "IDE": ["M5 6L7.5 8L5 10", "M8.5 10H11", "M13.5 3H2.5C2.22386 3 2 3.22386 2 3.5V12.5C2 12.7761 2.22386 13 2.5 13H13.5C13.7761 13 14 12.7761 14 12.5V3.5C14 3.22386 13.7761 3 13.5 3Z"], "Jobs": ["M3.5 6.5H1.5C1.22386 6.5 1 6.72386 1 7V9C1 9.27614 1.22386 9.5 1.5 9.5H3.5C3.77614 9.5 4 9.27614 4 9V7C4 6.72386 3.77614 6.5 3.5 6.5Z", "M13 2.5H10C9.72386 2.5 9.5 2.72386 9.5 3V6C9.5 6.27614 9.72386 6.5 10 6.5H13C13.2761 6.5 13.5 6.27614 13.5 6V3C13.5 2.72386 13.2761 2.5 13 2.5Z", "M13 9.5H10C9.72386 9.5 9.5 9.72386 9.5 10V13C9.5 13.2761 9.72386 13.5 10 13.5H13C13.2761 13.5 13.5 13.2761 13.5 13V10C13.5 9.72386 13.2761 9.5 13 9.5Z", "M4 8H7", "M9.5 11.5H8C7.73478 11.5 7.48043 11.3946 7.29289 11.2071C7.10536 11.0196 7 10.7652 7 10.5V5.5C7 5.23478 7.10536 4.98043 7.29289 4.79289C7.48043 4.60536 7.73478 4.5 8 4.5H9.5"], "Semantic layer": ["M2.04395 4.80664L8.0002 8.06664L13.9564 4.80664", "M8.24 1.56332L13.74 4.57457C13.8185 4.61754 13.8841 4.68081 13.9298 4.75776C13.9756 4.83472 13.9998 4.92255 14 5.01207V10.9896C13.9998 11.0791 13.9756 11.1669 13.9298 11.2439C13.8841 11.3208 13.8185 11.3841 13.74 11.4271L8.24 14.4383C8.16641 14.4786 8.08388 14.4997 8 14.4997C7.91612 14.4997 7.83359 14.4786 7.76 14.4383L2.26 11.4271C2.18147 11.3841 2.11591 11.3208 2.07017 11.2439C2.02444 11.1669 2.0002 11.0791 2 10.9896V5.01207C2.0002 4.92255 2.02444 4.83472 2.07017 4.75776C2.11591 4.68081 2.18147 4.61754 2.26 4.57457L7.76 1.56332C7.83359 1.52306 7.91612 1.50195 8 1.50195C8.08388 1.50195 8.16641 1.52306 8.24 1.56332Z", "M8 8.06836V14.5002"], "BI": ["M3 13V8.5H6", "M14 13H2", "M6 13V5.5H9.5", "M9.5 13V2.5H13V13"], "Conversational AI": ["M5.26672 10.733L1.82359 9.46422C1.72865 9.42917 1.64673 9.36587 1.58888 9.28284C1.53102 9.19981 1.5 9.10104 1.5 8.99984C1.5 8.89864 1.53102 8.79987 1.58888 8.71684C1.64673 8.63381 1.72865 8.57051 1.82359 8.53547L5.26672 7.26672L6.53547 3.82359C6.57051 3.72865 6.63381 3.64673 6.71684 3.58888C6.79987 3.53102 6.89864 3.5 6.99984 3.5C7.10104 3.5 7.19981 3.53102 7.28284 3.58888C7.36587 3.64673 7.42917 3.72865 7.46422 3.82359L8.73297 7.26672L12.1761 8.53547C12.271 8.57051 12.3529 8.63381 12.4108 8.71684C12.4687 8.79987 12.4997 8.89864 12.4997 8.99984C12.4997 9.10104 12.4687 9.19981 12.4108 9.28284C12.3529 9.36587 12.271 9.42917 12.1761 9.46422L8.73297 10.733L7.46422 14.1761C7.42917 14.271 7.36587 14.3529 7.28284 14.4108C7.19981 14.4687 7.10104 14.4997 6.99984 14.4997C6.89864 14.4997 6.79987 14.4687 6.71684 14.4108C6.63381 14.3529 6.57051 14.271 6.53547 14.1761L5.26672 10.733Z", "M11 1V4", "M14 4.5V6.5", "M9.5 2.5H12.5", "M13 5.5H15"], "Manage apps": ["M6.5 3H3.5C3.22386 3 3 3.22386 3 3.5V6.5C3 6.77614 3.22386 7 3.5 7H6.5C6.77614 7 7 6.77614 7 6.5V3.5C7 3.22386 6.77614 3 6.5 3Z", "M12.5 3H9.5C9.22386 3 9 3.22386 9 3.5V6.5C9 6.77614 9.22386 7 9.5 7H12.5C12.7761 7 13 6.77614 13 6.5V3.5C13 3.22386 12.7761 3 12.5 3Z", "M6.5 9H3.5C3.22386 9 3 9.22386 3 9.5V12.5C3 12.7761 3.22386 13 3.5 13H6.5C6.77614 13 7 12.7761 7 12.5V9.5C7 9.22386 6.77614 9 6.5 9Z", "M12.5 9H9.5C9.22386 9 9 9.22386 9 9.5V12.5C9 12.7761 9.22386 13 9.5 13H12.5C12.7761 13 13 12.7761 13 12.5V9.5C13 9.22386 12.7761 9 12.5 9Z"], "Architecture": ["M8 7C9.10457 7 10 6.10457 10 5C10 3.89543 9.10457 3 8 3C6.89543 3 6 3.89543 6 5C6 6.10457 6.89543 7 8 7Z", "M8 3V1.5", "M8.8125 6.82812L12 14", "M4 14L7.1875 6.82812", "M13 7.5C12.0894 9.28062 10.1375 10.5 8 10.5C7.2303 10.5011 6.46899 10.3401 5.76562 10.0275"], "Utilization": ["M7.5 10L13.5 4", "M3.5275 9.99994C3.50919 9.8339 3.50001 9.66698 3.5 9.49994C3.5006 8.78578 3.67103 8.08201 3.99722 7.44669C4.3234 6.81138 4.796 6.26275 5.37599 5.84607C5.95599 5.42938 6.62676 5.1566 7.33295 5.05024C8.03914 4.94387 8.7605 5.00696 9.4375 5.23431", "M13.789 6.54026C14.1899 7.32688 14.427 8.1867 14.4858 9.06763C14.5447 9.94857 14.4242 10.8323 14.1315 11.6653C14.0973 11.7634 14.0334 11.8485 13.9486 11.9087C13.8638 11.9689 13.7623 12.0011 13.6584 12.0009H2.34149C2.23732 12.0004 2.13587 11.9677 2.05112 11.9071C1.96638 11.8465 1.90252 11.7612 1.86836 11.6628C1.61838 10.9519 1.49382 10.2031 1.50024 9.44964C1.52774 5.87526 4.48336 2.96838 8.06274 3.00026C9.07159 3.00836 10.0646 3.25191 10.9627 3.71151"], "Team": ["M0.63916 12.4994C1.13859 11.7315 1.82191 11.1005 2.62708 10.6636C3.43224 10.2268 4.33376 9.99805 5.24979 9.99805C6.16581 9.99805 7.06733 10.2268 7.87249 10.6636C8.67766 11.1005 9.36098 11.7315 9.86041 12.4994", "M10.75 10C11.666 9.99946 12.5676 10.2279 13.3728 10.6645C14.178 11.1011 14.8613 11.7321 15.3606 12.5", "M5.25 10C7.04493 10 8.5 8.54493 8.5 6.75C8.5 4.95507 7.04493 3.5 5.25 3.5C3.45507 3.5 2 4.95507 2 6.75C2 8.54493 3.45507 10 5.25 10Z", "M9.54297 3.73125C9.98754 3.55393 10.4658 3.477 10.9435 3.50595C11.4213 3.5349 11.8868 3.66901 12.3067 3.89871C12.7266 4.1284 13.0906 4.44801 13.3726 4.83469C13.6547 5.22138 13.8479 5.66559 13.9384 6.13559C14.0289 6.60558 14.0144 7.08977 13.8961 7.55353C13.7777 8.0173 13.5584 8.44921 13.2538 8.81839C12.9492 9.18758 12.5668 9.48492 12.134 9.68918C11.7011 9.89344 11.2285 9.99958 10.7498 10"], "Settings": ["M8 13C10.7614 13 13 10.7614 13 8C13 5.23858 10.7614 3 8 3C5.23858 3 3 5.23858 3 8C3 10.7614 5.23858 13 8 13Z", "M8 8H14.5", "M8 8.00047L4.75 2.37109", "M8 8L4.75 13.6294", "M8 3V1.5", "M3.66998 5.5L2.37061 4.75", "M3 8H1.5", "M3.66998 10.5L2.37061 11.25", "M8 13V14.5", "M10.5 12.3301L11.25 13.6295", "M12.3301 10.5L13.6295 11.25", "M12.3301 5.5L13.6295 4.75", "M10.5 3.67047L11.25 2.37109"], "Community": ["M6.75 10.5C8.82107 10.5 10.5 8.82107 10.5 6.75C10.5 4.67893 8.82107 3 6.75 3C4.67893 3 3 4.67893 3 6.75C3 8.82107 4.67893 10.5 6.75 10.5Z", "M1.5 13C2.78437 11.4719 4.5975 10.5 6.75 10.5C8.9025 10.5 10.7156 11.4719 12 13", "M12.5 4.29688C12.83 5.07285 13 5.90741 13 6.75063C13 7.59384 12.83 8.4284 12.5 9.20437", "M14.335 3.5C14.7737 4.52734 14.9999 5.63288 14.9999 6.75C14.9999 7.86712 14.7737 8.97266 14.335 10"], "Help": ["M2.82188 14.3819C2.74905 14.4431 2.66025 14.4823 2.56591 14.4949C2.47158 14.5074 2.37562 14.4928 2.28931 14.4527C2.20301 14.4126 2.12994 14.3487 2.07869 14.2685C2.02744 14.1883 2.00014 14.0952 2 14V4C2 3.86739 2.05268 3.74021 2.14645 3.64645C2.24021 3.55268 2.36739 3.5 2.5 3.5H13.5C13.6326 3.5 13.7598 3.55268 13.8536 3.64645C13.9473 3.74021 14 3.86739 14 4V12C14 12.1326 13.9473 12.2598 13.8536 12.3536C13.7598 12.4473 13.6326 12.5 13.5 12.5H5L2.82188 14.3819Z", "M8 7.6v.8", "M5.25 7.6v.8", "M10.75 7.6v.8"]};
+const LOGO_SVG = "<path d=\"M13.0132 6.30952L13.0107 6.30952C12.1475 5.69788 10.854 5.39293 8.96634 5.3632C7.12658 5.37528 5.28682 5.39116 3.44706 5.41086C3.30465 5.35081 3.20486 5.21261 3.20457 5.04886C3.2023 4.48523 3.20068 3.9216 3.19841 3.35798C3.19802 3.13582 3.38021 2.95271 3.60611 2.94978C6.89953 2.90661 10.2581 2.8773 13.5522 2.86079C13.9076 2.85954 14.0926 2.45236 13.8535 2.19952C13.6419 1.97647 13.4303 1.75342 13.2186 1.53036C12.8127 1.102 12.4067 0.673631 12.0007 0.24463C11.8549 0.091916 11.6493 0.00468174 11.4336 0.00505617C7.75852 0.0177831 4.08343 0.0305101 0.408343 0.043237C0.1818 0.0436303 -0.00102808 0.226747 4.35113e-06 0.451436C0.00235433 1.0633 0.00406617 1.67517 0.00641504 2.2864C0.00641504 2.2864 0.00578246 2.28957 0.00387024 2.29085C0.00387024 2.29085 0.0013221 2.29339 0.00132544 2.29529C0.00508542 3.34702 0.0088454 4.39874 0.0126054 5.45046C0.0106909 5.45047 0.00877649 5.45047 0.00686204 5.45047L0.011335 7.9995C0.0117304 8.22482 0.195832 8.40413 0.422368 8.39993C2.93724 8.3524 5.45276 8.31566 7.96767 8.28972C10.3677 8.26587 10.9219 8.78728 10.9669 9.69676C10.9689 9.73801 10.971 10.1988 10.9704 10.2553C10.9722 11.2448 10.4818 11.8157 7.97392 11.8498C5.45839 11.8853 2.94353 11.936 0.428689 12.0019C0.202156 12.0081 0.0186982 12.1956 0.0190936 12.4209L0.0228504 14.5618C0.0232458 14.7872 0.207343 14.9639 0.433874 14.9566C3.28242 14.8653 6.13228 14.7975 8.98155 14.7545C10.8697 14.6839 12.1614 14.363 13.0225 13.7421C13.0225 13.7421 13.0231 13.7421 13.0237 13.7421C13.0237 13.7421 13.0244 13.7421 13.025 13.7421C13.9727 13.0575 14.4138 12.0132 14.411 10.4518C14.4105 10.1636 14.41 9.87612 14.4095 9.58796C14.4068 8.02719 13.9621 6.98512 13.012 6.31079L13.0132 6.30952Z\" fill=\"currentColor\"/><path d=\"M31.8641 0.870296C31.9575 0.770807 31.9998 0.650918 32 0.53413C31.9998 0.275165 31.798 0.0285431 31.4955 0.028018L27.9901 0.0219329C27.8491 0.0216881 27.7143 0.0798483 27.6184 0.182506C26.3454 1.60524 25.0723 3.01909 23.7993 4.42977C23.6996 4.53622 23.5636 4.58867 23.4276 4.5878C23.4244 4.58779 23.4213 4.58779 23.4181 4.58778C23.4149 4.58778 23.4117 4.58777 23.4085 4.58777C23.2719 4.58753 23.1367 4.53271 23.0374 4.42527C21.7693 3.00066 20.5012 1.5824 19.2325 0.166679C19.137 0.0643238 19.0024 0.00633078 18.8614 0.00608595L15.3561 8.52566e-07C15.0536 -0.000524241 14.8509 0.241587 14.8504 0.495474C14.8502 0.610992 14.8921 0.728488 14.9851 0.827031C16.8781 2.89506 18.7717 4.96182 20.6646 7.04064C20.757 7.13918 20.8014 7.26493 20.7974 7.38996C20.8003 7.51437 20.7561 7.63997 20.6634 7.73756C18.7632 9.79329 16.8624 11.8471 14.9615 13.913C14.8682 14.0112 14.8258 14.1292 14.8256 14.2447C14.8252 14.4992 15.0277 14.7414 15.3296 14.7413C16.498 14.7414 17.6665 14.7454 18.8355 14.7537C18.9766 14.7546 19.1113 14.6977 19.2072 14.597C20.4802 13.1933 21.7532 11.7915 23.0263 10.3891C23.126 10.2832 23.2614 10.2314 23.3979 10.2329C23.4011 10.2329 23.4043 10.233 23.4075 10.233C23.4107 10.233 23.4139 10.233 23.4171 10.233C23.5536 10.2345 23.6888 10.2893 23.7882 10.3974C25.0562 11.8309 26.3243 13.2739 27.5923 14.7296C27.6878 14.8345 27.8224 14.8963 27.9634 14.8997C29.1318 14.929 30.3002 14.9622 31.4679 14.9997C31.7698 15.0091 31.9731 14.7702 31.9736 14.5119C31.9738 14.3945 31.9319 14.2738 31.8389 14.1708C29.9461 12.0133 28.0532 9.89066 26.1597 7.78899C26.0673 7.68918 26.0229 7.56279 26.0269 7.43712C26.024 7.31208 26.0682 7.18585 26.1609 7.08826C28.0611 5.03063 29.9613 2.96284 31.8622 0.870927L31.8641 0.870296Z\" fill=\"currentColor\"/><path d=\"M28.5678 7.21429C29.5575 6.15349 30.5473 5.08951 31.537 4.01919C31.6943 3.84936 31.9819 3.9622 31.9815 4.19387L31.9698 10.8502C31.9694 11.0825 31.6821 11.1854 31.5254 11.01C30.5395 9.90638 29.5529 8.81168 28.5669 7.72333C28.4345 7.57712 28.4348 7.35624 28.5678 7.21365L28.5678 7.21429Z\" fill=\"currentColor\"/>";
+const NavIcon = ({ name }) => html`<svg className="ic" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">${(FIG_NAV[name] || []).map((d, i) => html`<path key=${i} d=${d} />`)}</svg>`;
+const LOGO_PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAABRpJREFUeAHtnO9x20YQxR89+R52EKSC2BUEriBWBWYqkFOB6ArkVBCqgsgVCKkgSgVEKrA7ON8Kx7Eli+S9vTuQOOxvhoMZDf4IeHh3u3eLAwzDMAzDMAzDMAzDOB8WKIRzbuk31/7XEod9XCwW747t5M8t+1wingt/3nsk4K/5t9+8jN3fX+9nKPgBBQhi3IG4gcCPkfvJ+RvEs0Q67DVVvEBmvBiN3/wLXgwDmQUJYogzGhgqsgnixRBHmBiJZBHEi9GifjEaYt/PUJIsiBfjLQYxcnScsbA33GBcTiOIF+PKbzYYH/aGc7wsDbFvDyVqQYIYa5yGHhwNEgj94yio8hD/D0rCdzSBK0gPjl+QRgOO/6CEcogkfCFjPaUYkgX34Jqt1DecPb6HkmhBvsm+3+A8YIZClonNzq/gUA/TRAmizL7lDf4D5WCbhRYKwovYMsd4B3dQclQQZfbd+98rJLwpEXTg+A06WnB0SOCgIMHm4owG8fT+9zq08yXpwNGGt53lLbn/RySwVxBlwieOeDWCGNIsSJPYgYMKRkLrwPaZHRJ4secfERE+gBPjFoMz1FmqAvZtZOZQhBYcfeq8y7OChIf6GvGh5Y0/5mJkMYQNOJZh3C2WK3AkNVdHEcv639YdZn3g+NZx/AUSf8yd47iLPO/K8TQojTssyvrIsWMIwl5DaCPOu3UcUUJnwT0vyiriuOKChOt8chx3R86ncccKY+K+iiI3HxV5uPEEWTue9sD5to5ji1PgBlGis3U3niDSWbMu2e45l8Yd2cb2qMFFyS9Sw7oShOjuT3A0Tx+kGzplNrLqMYT8WchedXJCJG9iw+4r9zh7FzEacNzkTISrEUTpEhHjwRHBHStw9Mg8Y1qTQwSNS965oYO/Bs/73MNEVQkSXPIePDLpxo5ZSX+6QWZqc4iIIi7pwaEZBdYIf5TqBAn8jrLclnCHUKUgYcauQzmKzYTW6hChlEs2Jed7qhUkPLTc7XyPQn3HjpodImjC4EPcLArPhlYtSEIY/BwS5q5RmNodsguDc4y/FW2qdlQvSCA1KrovFeY+ZRaCZAiDLzASc3GIoA2DN4sRypp2zEkQLf9jROYkCDvxtOPSjVFNEpiFIG6oAVhBx24BhFGYi0NSH+gbxxXYqaleEDeU5zRIR9vkUVQtiLJoYR+tG6H2qnaHSAV/g3xcO90nDdFUK0hwxxp5ETGy1WA9R80OKdXmFw2DqxQkREQrlKFoGFyrQ1QlqQTFwuDqBFGGuZpJrCJNYo0O0Two+VqsA0eRMLgqQdyw/koDjk0oINdMQGUPg6sRRFmbKzwIEeZMbsCRPQyuySGaJPBpba48XLY/uczpkioE0VauPy1aSKigP80HO2dMC4U79vxdUxvMfv++l1oEob962le0oCwdWubKSyYvSJh8asBxcH49iNWBI0teUoND2MVh+sjlk9iIq83RuU9aEKdbHCaqOQouob/GQiJTd0gLDvarJzbiYlee+46pC8I2Vx04PpD7t6lD85MVxCmW3gMZPSnX5GKb0EdM2SEvwXGvrEBkl1zSLiX4wJQFYd/Ef6BjAw72RXnElAVhF0e+hQJFs5W0JO1smqxFwtKt4JeknZcgoUNnkrAOabAf/MzOIewNq9diD3TgaKBkqoKwQxQ9ElBEZz9ByVQFacCR40vcnthXPaZlDinD7AQ5BYzLTJARyNHsHcUEOTNMkDPDBDEMwzAMwzAMwzAMwzAMQ8UXw/Xjj+ghv9kAAAAASUVORK5CYII=";
+const Logo = () => html`<img className="logo" src=${LOGO_PNG} width="28" height="28" alt="1X" />`;
+
+/* ---------- designer's notes ---------- */
+const NotesCtx = React.createContext({ on: false });
+const NOTE_TOTAL = 10;
+function NotePop({ n, title, children, onClose, onGo, anchor }) {
+  const ref = useRef(null);
+  const [pos, setPos] = useState(null);
+  const place = () => {
+    const at = anchor && anchor.current, el = ref.current;
+    if (!at || !el || !at.getBoundingClientRect) return;
+    const r = at.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, vw = window.innerWidth, vh = window.innerHeight, m = 12;
+    const left = Math.max(m, Math.min(r.left + r.width / 2 - w / 2, vw - w - m));
+    let top = r.bottom + 8;
+    if (top + h > vh - m && r.top - 8 - h > m) top = r.top - 8 - h;
+    setPos({ left, top: Math.max(m, top) });
+  };
+  React.useLayoutEffect(place, []);
+  useEffect(() => {
+    const f = () => place();
+    window.addEventListener("resize", f); window.addEventListener("scroll", f, true);
+    return () => { window.removeEventListener("resize", f); window.removeEventListener("scroll", f, true); };
+  }, []);
+  const node = html`<span ref=${ref} className="hs-pop" role="dialog" aria-label=${"Design decision " + n}
+      style=${pos ? { left: pos.left + "px", top: pos.top + "px" } : { left: "0px", top: "0px", visibility: "hidden" }}>
+    <span className="hs-pop-top"><span className="hs-eyebrow">Design decision ${n} of ${NOTE_TOTAL}</span>
+      <span className="hs-nav">
+        <button type="button" className="hs-btn" onClick=${() => onGo(+n - 1)} disabled=${+n <= 1} aria-label="Previous design decision" title="Previous (←)"><${Icon} n="chevL" s=${14} /></button>
+        <button type="button" className="hs-btn" onClick=${() => onGo(+n + 1)} disabled=${+n >= NOTE_TOTAL} aria-label="Next design decision" title="Next (→)"><${Icon} n="chev" s=${14} /></button>
+        <span className="hs-sep"></span>
+        <button type="button" className="hs-btn" onClick=${onClose} aria-label="Close"><${Icon} n="x" s=${14} /></button>
+      </span></span>
+    <strong className="hs-title">${title}</strong>
+    <span className="hs-body">${children}</span>
+  </span>`;
+  return typeof ReactDOM !== "undefined" && ReactDOM.createPortal && typeof document !== "undefined" && document.body ? ReactDOM.createPortal(node, document.body) : node;
+}
+
+function Note({ n, title, children }) {
+  const ctx = React.useContext(NotesCtx);
+  if (!ctx || !ctx.on) return null;
+  const open = ctx.openId === n;
+  return html`<span className="hs" data-hs=${n} ref=${ctx.anchorRef && open ? ctx.anchorRef : null}>
+    <button type="button" className=${"hs-dot" + (open ? " open" : "")} aria-expanded=${open} aria-label=${"See design decision " + n}
+      onClick=${e => { e.preventDefault(); e.stopPropagation(); ctx.setOpenId(open ? null : n); }}><span className="hs-tip" aria-hidden="true">See design decision</span></button>
+    ${open && html`<${NotePop} n=${n} title=${title} onClose=${() => ctx.setOpenId(null)} onGo=${ctx.goTo} anchor=${ctx.anchorRef}>${children}<//>`}
+  </span>`;
+}
+
+/* ---------- helpers ---------- */
+const nowLabel = () => {
+  const d = new Date();
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) + ", " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+};
+const uid = () => Math.random().toString(36).slice(2, 9);
+const STAGES = ["Reading your question", "Matching terms to the Northline Sales semantic model", "Building the semantic query", "Querying the semantic layer"];
+function toCsv(cols, rows) {
+  const esc = v => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v;
+  return [cols.map(c => esc(c.label)).join(","), ...rows.map(r => cols.map(c => esc(c.num ? (c.fmt === "pct" ? (r[c.key] * 100).toFixed(1) : Math.round(r[c.key] * 10) / 10) : r[c.key])).join(","))].join("\n");
+}
+async function copyText(t) { try { await navigator.clipboard.writeText(t); return true; } catch (e) { return false; } }
+
+/* ---------- table / chart / sql ---------- */
+function ResultTable({ result, pageSize = 6 }) {
+  const [page, setPage] = useState(0);
+  const pages = Math.max(1, Math.ceil(result.rows.length / pageSize));
+  const rows = result.rows.slice(page * pageSize, page * pageSize + pageSize);
+  return html`<div className="tbl-wrap">
+    <div className="tbl-scroll"><table className="tbl">
+      <thead><tr>${result.columns.map(c => html`<th key=${c.key} className=${(c.num ? "num " : "") + (c.primary ? "primary" : "")}>${c.label}</th>`)}</tr></thead>
+      <tbody>${rows.map((r, i) => html`<tr key=${i}>${result.columns.map(c => {
+        const v = r[c.key];
+        const flagged = c.flag && c.flag(v);
+        return html`<td key=${c.key} className=${(c.num ? "num " : "") + (c.primary ? "primary " : "") + (flagged ? "bad" : "")}>${c.num ? ENGINE.fmt(v, c.fmt) : v}${flagged ? html` <span className="pill bad-pill">Critical</span>` : null}</td>`;
+      })}</tr>`)}</tbody>
+    </table></div>
+    ${pages > 1 && html`<div className="pager"><button className="icon-btn" disabled=${page === 0} onClick=${() => setPage(page - 1)} aria-label="Previous page"><${Icon} n="chevL" /></button><span>Page ${page + 1} of ${pages}</span><button className="icon-btn" disabled=${page >= pages - 1} onClick=${() => setPage(page + 1)} aria-label="Next page"><${Icon} n="chev" /></button></div>`}
+  </div>`;
+}
+
+function Sql({ sql }) {
+  const [copied, setCopied] = useState(false);
+  const hl = sql
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/(--.*)/g, '<span class="c">$1</span>')
+    .replace(/('[^']*')/g, '<span class="s">$1</span>')
+    .replace(/\b(SELECT|FROM|WHERE|AND|IN|GROUP BY|ORDER BY|LIMIT|AS|DESC|ASC|SUM|AVG|ROUND)\b/g, '<span class="k">$1</span>');
+  return html`<div className="sql">
+    <button className="ghost-btn sql-copy" onClick=${async () => { await copyText(sql); setCopied(true); setTimeout(() => setCopied(false), 1500); }}><${Icon} n=${copied ? "check" : "copy"} s=${14} />${copied ? "Copied" : "Copy SQL"}</button>
+    <pre><code dangerouslySetInnerHTML=${{ __html: hl }}></code></pre>
+  </div>`;
+}
+
+/* ---------- assistant messages ---------- */
+/* Matrix loader: 7×7 LED grid, rotating comet spinner, 12 frames @ 12fps (after ElevenLabs UI "Matrix" loader preset) */
+const MATRIX_N = 7, MATRIX_FRAMES = 12;
+const LOADER_FRAMES = (() => {
+  const c = (MATRIX_N - 1) / 2, frames = [];
+  for (let f = 0; f < MATRIX_FRAMES; f++) {
+    const head = (f / MATRIX_FRAMES) * Math.PI * 2;
+    const fr = [];
+    for (let r = 0; r < MATRIX_N; r++) {
+      const row = [];
+      for (let col = 0; col < MATRIX_N; col++) {
+        const dx = col - c, dy = r - c, d = Math.hypot(dx, dy);
+        if (d < 1.9 || d > 3.3) { row.push(0); continue; }
+        let behind = head - Math.atan2(dy, dx);
+        behind = ((behind % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        const tail = Math.PI * 1.1;
+        row.push(behind < tail ? Math.pow(1 - behind / tail, 1.6) : 0);
+      }
+      fr.push(row);
+    }
+    frames.push(fr);
+  }
+  return frames;
+})();
+
+/* Ripple: rings expand from the centre dot and fade as they reach the edge, 16 frames */
+const RIPPLE_FRAMES = (() => {
+  const c = (MATRIX_N - 1) / 2, maxR = Math.hypot(c, c), count = 16, frames = [];
+  for (let f = 0; f < count; f++) {
+    const fr = [];
+    for (let r = 0; r < MATRIX_N; r++) {
+      const row = [];
+      for (let col = 0; col < MATRIX_N; col++) {
+        const d = Math.hypot(col - c, r - c);
+        let b = 0;
+        for (const offset of [0, 0.5]) { // two rings in flight, half a cycle apart
+          const radius = ((f / count + offset) % 1) * (maxR + 1);
+          const band = Math.max(0, 1 - Math.abs(d - radius) / 0.9);
+          const fade = 1 - Math.min(1, radius / (maxR + 1));
+          b = Math.max(b, band * (0.25 + 0.75 * fade));
+        }
+        row.push(b);
+      }
+      fr.push(row);
+    }
+    frames.push(fr);
+  }
+  return frames;
+})();
+
+function Matrix({ frames = RIPPLE_FRAMES, fps = 14, size = 3, gap = 1.5, label = "Loading" }) {
+  const [f, setF] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => setF(x => (x + 1) % frames.length), 1000 / fps);
+    return () => clearInterval(t);
+  }, [frames, fps]);
+  const n = frames[0].length, w = n * size + (n - 1) * gap;
+  const cells = [];
+  frames[f].forEach((row, r) => row.forEach((b, c) => cells.push(html`<circle key=${r + "-" + c} cx=${c * (size + gap) + size / 2} cy=${r * (size + gap) + size / 2} r=${size / 2} className="mx-off" /><circle key=${"o" + r + "-" + c} cx=${c * (size + gap) + size / 2} cy=${r * (size + gap) + size / 2} r=${size / 2} className="mx-on" style=${{ opacity: b }} />`)));
+  return html`<svg className="matrix" width=${w} height=${w} viewBox=${`0 0 ${w} ${w}`} role="img" aria-label=${label}>${cells}</svg>`;
+}
+
+function Thinking({ stage }) {
+  return html`<div className="thinking" aria-live="polite">
+    <${Matrix} label="Working on your answer" />
+    <span className="shimmer">${STAGES[stage] || STAGES[0]}…</span>
+    <${Note} n="2" title="Name the work, not just “Thinking…”">A static “Thinking..” says nothing during the wait. Naming each stage (matching terms to the semantic model, building the semantic query, querying it) shows the answer is grounded in the company's own data and makes the wait feel shorter.<//>
+  </div>`;
+}
+
+/* ---------- semantic query chips: "did it understand me?" + "is the metric defined right?" ---------- */
+const SEM = ENGINE.SEMANTIC;
+const METRIC_ORDER = ["revenue", "units", "profit", "margin", "stock", "price", "cover"];
+const FILTER_DIMS = ["region", "fuel_type", "make", "model", "color"];
+
+function toDraft(p) {
+  const low = p.intent === "lowstock";
+  const filters = {};
+  Object.entries(p.filters || {}).forEach(([k, v]) => { filters[k] = [...v]; });
+  return { metric: low ? "cover" : p.metric, dim: low ? null : p.dim, filters, top: p.top || (low ? 8 : null) };
+}
+function draftToParsed(d, base) {
+  const low = d.metric === "cover";
+  return { ...base, intent: low ? "lowstock" : "aggregate", metric: low ? null : d.metric, dim: low ? null : (d.dim || "model"),
+    filters: d.filters, top: d.top || null, edited: true, followUp: false };
+}
+const dimLabel = k => SEM.dimensions[k] ? SEM.dimensions[k].label : k;
+const topLabel = (t, low) => t ? (low ? `Lowest ${t}` : `Top ${t}`) : "All rows";
+function diffDraft(a, b) {
+  const out = [];
+  if (a.metric !== b.metric) out.push(`Metric → ${SEM.measures[b.metric].label}`);
+  if (b.metric !== "cover" && a.dim !== b.dim) out.push(`Breakdown → ${dimLabel(b.dim || "model")}`);
+  const keys = new Set([...Object.keys(a.filters), ...Object.keys(b.filters)]);
+  keys.forEach(k => {
+    const x = (a.filters[k] || []).join("/"), y = (b.filters[k] || []).join("/");
+    if (x === y) return;
+    if (!x) out.push(`Added ${dimLabel(k)} is ${y}`);
+    else if (!y) out.push(`Removed ${dimLabel(k)} filter`);
+    else out.push(`${dimLabel(k)} → ${y}`);
+  });
+  if ((a.top || null) !== (b.top || null)) out.push(`Rows → ${topLabel(b.top, b.metric === "cover")}`);
+  return out;
+}
+
+function MetricDef({ k }) {
+  const m = SEM.measures[k];
+  return html`<div className="def">
+    <div className="def-top"><code>${m.id}</code>${m.certified
+      ? html`<span className="cert"><${Icon} n="check" s=${11} />Certified</span>`
+      : html`<span className="uncert">Not certified</span>`}</div>
+    <strong>${m.label}</strong>
+    <p>${m.description}</p>
+    <div className="def-meta">Owner: ${m.owner} · Updated ${m.updated}</div>
+  </div>`;
+}
+
+function Pop({ children, wide }) {
+  const ref = useRef(null);
+  React.useLayoutEffect(() => {
+    const el = ref.current; if (!el) return;
+    el.style.left = "0px"; el.style.right = "auto";
+    const r = el.getBoundingClientRect();
+    if (r.right > window.innerWidth - 12) { el.style.left = "auto"; el.style.right = "0px"; }
+  });
+  return html`<div ref=${ref} className=${"pop" + (wide ? " wide" : "")} role="dialog">${children}</div>`;
+}
+const Opt = ({ on, onClick, children, sub }) => html`<button type="button" className=${"opt" + (on ? " on" : "")} onClick=${onClick}>
+  <span className="opt-main">${children}${sub && html`<span className="opt-sub">${sub}</span>`}</span>${on && html`<${Icon} n="check" s=${14} />`}</button>`;
+
+function QueryChips({ result, data, onRerun, note }) {
+  const orig = useMemo(() => toDraft(result.parsed), [result]);
+  const [d, setD] = useState(orig);
+  const [open, setOpen] = useState(null);
+  const [hover, setHover] = useState(false);
+  const [addDim, setAddDim] = useState(null);
+  const box = useRef(null);
+  const hoverT = useRef(null);
+  useEffect(() => { setD(orig); setOpen(null); }, [orig]);
+  useEffect(() => {
+    if (!open) return;
+    const down = e => { if (box.current && !box.current.contains(e.target)) { setOpen(null); setAddDim(null); } };
+    const key = e => { if (e.key === "Escape") { setOpen(null); setAddDim(null); } };
+    document.addEventListener("mousedown", down); window.addEventListener("keydown", key);
+    return () => { document.removeEventListener("mousedown", down); window.removeEventListener("keydown", key); };
+  }, [open]);
+
+  const low = d.metric === "cover";
+  const changes = diffDraft(orig, d);
+  const toggle = k => { setHover(false); setAddDim(null); setOpen(open === k ? null : k); };
+  const set = patch => { setD(x => ({ ...x, ...patch })); setOpen(null); setAddDim(null); };
+  const setFilter = (k, v) => set({ filters: { ...d.filters, [k]: [v] } });
+  const dropFilter = k => { const f = { ...d.filters }; delete f[k]; set({ filters: f }); };
+  const changed = {
+    metric: orig.metric !== d.metric, dim: !low && orig.dim !== d.dim, top: (orig.top || null) !== (d.top || null),
+    filter: k => (orig.filters[k] || []).join() !== (d.filters[k] || []).join(),
+  };
+  const chip = (key, label, { cls = "", locked, title, onEnter, onLeave, extra } = {}) => html`<button type="button"
+      className=${"qchip " + cls + (locked ? " locked" : "") + (open === key ? " open" : "")}
+      onClick=${() => toggle(key)} onMouseEnter=${onEnter} onMouseLeave=${onLeave} aria-expanded=${open === key} title=${title}>
+      ${label}${locked ? html`<${Icon} n="lock" s=${11} />` : html`<${Icon} n="caret" s=${12} />`}${extra}</button>`;
+
+  const m = SEM.measures[d.metric];
+  const filterKeys = Object.keys(d.filters);
+  const free = FILTER_DIMS.filter(k => !d.filters[k] && !(k === d.dim && !low));
+
+  return html`<div className="qchips-box" ref=${box}>
+    <div className="qsentence">
+      <span className="qwrap" onMouseEnter=${() => { clearTimeout(hoverT.current); hoverT.current = setTimeout(() => setHover(true), 180); }}
+        onMouseLeave=${() => { clearTimeout(hoverT.current); setHover(false); }}>
+        ${chip("metric", html`${m.certified && html`<span className="seal" title="Certified by the data team"><${Icon} n="check" s=${10} /></span>`}${m.label}`, { cls: "metric" + (changed.metric ? " changed" : "") })}
+        ${open === "metric" ? html`<${Pop} wide>
+            <${MetricDef} k=${d.metric} />
+            <div className="pop-h">Change metric</div>
+            ${METRIC_ORDER.map(k => html`<${Opt} key=${k} on=${d.metric === k} onClick=${() => set({ metric: k, top: k === "cover" ? (d.top || 8) : (d.metric === "cover" ? null : d.top) })}
+              sub=${SEM.measures[k].certified ? "Certified" : "Not certified"}>${SEM.measures[k].label}<//>`)}
+          <//>`
+        : hover && html`<${Pop} wide><${MetricDef} k=${d.metric} /><//>`}
+      </span>
+      <span className="qword">by</span>
+      <span className="qwrap">
+        ${low ? chip("dim", "Vehicle line", { locked: true })
+              : chip("dim", dimLabel(d.dim), { cls: changed.dim ? "changed" : "" })}
+        ${open === "dim" && html`<${Pop}>
+          ${low ? html`<p className="pop-note">Weeks of cover is always listed per vehicle line (model, trim, color and region).</p>`
+            : html`<div className="pop-h">Break down by</div>${Object.keys(SEM.dimensions).map(k => html`<${Opt} key=${k} on=${d.dim === k} onClick=${() => set({ dim: k })} sub=${SEM.dimensions[k].description}>${dimLabel(k)}<//>`)}`}
+        <//>`}
+      </span>
+      ${filterKeys.length > 0 && html`<span className="qword">where</span>`}
+      ${filterKeys.map((k, i) => html`<span className="qwrap" key=${k}>
+        ${i > 0 && html`<span className="qword and">and</span>`}
+        ${chip("f:" + k, html`${dimLabel(k)} <span className="qis">is</span> ${d.filters[k].join(" or ")}`, { cls: "filter" + (changed.filter(k) ? " changed" : ""),
+          extra: html`<span className="qx" role="button" tabIndex="0" aria-label=${"Remove " + dimLabel(k) + " filter"} onClick=${e => { e.stopPropagation(); dropFilter(k); }} onKeyDown=${e => { if (e.key === "Enter") { e.stopPropagation(); dropFilter(k); } }}><${Icon} n="x" s=${11} /></span>` })}
+        ${open === "f:" + k && html`<${Pop}>
+          <div className="pop-h">${dimLabel(k)} is</div>
+          <div className="opt-list">${ENGINE.dimensionValues(data, k).map(v => html`<${Opt} key=${v} on=${d.filters[k].includes(v)} onClick=${() => setFilter(k, v)}>${v}<//>`)}</div>
+          <button type="button" className="pop-remove" onClick=${() => dropFilter(k)}>Remove this filter</button>
+        <//>`}
+      </span>`)}
+      ${free.length > 0 && html`<span className="qwrap">
+        <button type="button" className=${"qchip add" + (open === "add" ? " open" : "")} onClick=${() => toggle("add")} aria-expanded=${open === "add"}><${Icon} n="plus" s=${12} />Filter</button>
+        ${open === "add" && html`<${Pop}>
+          ${!addDim ? html`<div className="pop-h">Filter by</div>${free.map(k => html`<${Opt} key=${k} onClick=${() => setAddDim(k)}>${dimLabel(k)}<//>`)}`
+            : html`<button type="button" className="pop-back" onClick=${() => setAddDim(null)}><${Icon} n="chevL" s=${12} />${dimLabel(addDim)} is</button>
+              <div className="opt-list">${ENGINE.dimensionValues(data, addDim).map(v => html`<${Opt} key=${v} onClick=${() => setFilter(addDim, v)}>${v}<//>`)}</div>`}
+        <//>`}
+      </span>`}
+      <span className="qword">·</span>
+      <span className="qwrap">
+        ${chip("top", topLabel(d.top, low), { cls: changed.top ? "changed" : "" })}
+        ${open === "top" && html`<${Pop}>
+          <div className="pop-h">Show</div>
+          ${(low ? [5, 8, 10, 15] : [null, 3, 5, 10]).map(t => html`<${Opt} key=${String(t)} on=${(d.top || null) === t} onClick=${() => set({ top: t })}>${topLabel(t, low)}<//>`)}
+        <//>`}
+      </span>
+      <span className="qword">in</span>
+      <span className="qwrap">
+        ${chip("time", SEM.time.label, { locked: true })}
+        ${open === "time" && html`<${Pop}><div className="pop-h">${SEM.time.detail}</div><p className="pop-note">${SEM.time.description}</p><//>`}
+      </span>
+      <span className="qword">from</span>
+      <span className="qwrap">
+        ${chip("view", SEM.view.name + " view", { locked: true })}
+        ${open === "view" && html`<${Pop}><div className="pop-h">${SEM.view.name} semantic view</div><p className="pop-note">${SEM.view.description}</p><div className="def-meta">Table: ${SEM.view.table} · ${SEM.view.rows} rows · synced ${SEM.view.synced}</div><//>`}
+      </span>
+      ${note}
+    </div>
+    ${changes.length > 0 ? html`<div className="qbar" role="status">
+        <span className="qbar-text"><strong>${changes.length} change${changes.length > 1 ? "s" : ""}</strong> ${changes.join(" · ")}</span>
+        <span className="spacer"></span>
+        <button type="button" className="ghost-btn" onClick=${() => setD(orig)}>Reset</button>
+        <button type="button" className="primary-btn" onClick=${() => onRerun(draftToParsed(d, result.parsed), changes)}><${Icon} n="retry" s=${14} />Rerun with changes</button>
+      </div>`
+      : html`<p className="qhint">Hover the metric to see how it's defined. Tap any chip to correct it, then rerun. No need to rephrase the question.</p>`}
+  </div>`;
+}
+
+/* ---------- charts: type picker + recommended default ---------- */
+const CHART_TYPES = [
+  { key: "bar", label: "Bar", icon: "M4 20h16M7 20v-7M12 20V6M17 20v-10" },
+  { key: "line", label: "Line", icon: "M3 17l5-6 4 3 8-9" },
+  { key: "area", label: "Area", icon: "M3 17l5-6 4 3 8-9V20H3z" },
+  { key: "doughnut", label: "Doughnut", icon: "M12 3a9 9 0 1 0 9 9M12 3v5a4 4 0 1 1-4 4H3" },
+  { key: "radar", label: "Radar", icon: "M12 3l8.5 6.2-3.2 9.8H6.7L3.5 9.2zM12 9l3 2.2-1.1 3.5h-3.8L9 11.2z" },
+];
+const ADDITIVE = ["revenue", "units", "profit", "stock"];
+const SHARE_WORDS = /\b(share|mix|split|proportion|composition|contribut\w*|breakdown|percent(age)? of)\b|\bbreak\s+(\w+\s+){0,3}down\b/i;
+
+function chartFacts(result) {
+  const c = result.chart, p = result.parsed || {};
+  const n = Math.min(result.rows.length, 10);
+  const dim = c.lowIsBad ? "vehicle lines" : (ENGINE.SEMANTIC.dimensions[p.dim] ? ENGINE.SEMANTIC.dimensions[p.dim].label.toLowerCase() + (n === 1 ? "" : "s") : "groups");
+  const metric = p.intent === "lowstock" ? "cover" : p.metric;
+  return { n, dim, metric, additive: ADDITIVE.includes(metric), share: SHARE_WORDS.test(p.raw || ""), label: c.label };
+}
+function recommendChart(result) {
+  const f = chartFacts(result);
+  if (f.additive && f.share && f.n >= 2 && f.n <= 6)
+    return { key: "doughnut", why: `You asked how the total splits, and there are only ${f.n} parts, so a doughnut shows each one's share at a glance.` };
+  return { key: "bar", why: `Ranking ${f.n} ${f.dim} by ${f.label.toLowerCase()}: bar lengths on one baseline are the easiest to compare.` };
+}
+function chartAvailability(result, key) {
+  const f = chartFacts(result);
+  if (key === "doughnut" && !f.additive) return { disabled: true, note: `${f.label} doesn't add up to a whole` };
+  if (key === "doughnut" && f.n < 2) return { disabled: true, note: "Needs at least 2 parts" };
+  if (key === "radar" && f.n < 3) return { disabled: true, note: "Needs at least 3 categories" };
+  if ((key === "line" || key === "area") && f.n < 2) return { disabled: true, note: "Needs at least 2 points" };
+  if (key === "line" || key === "area") return { note: "Best for trends over time" };
+  if (key === "radar") return { note: "Best for comparing profile shapes" };
+  if (key === "doughnut") return { note: "Best for share of a whole" };
+  return { note: "Best for ranking and comparing" };
+}
+const CHART_CAVEAT = {
+  line: "These categories have no time order, so the slope between points doesn't mean anything. Read the dots, not the line.",
+  area: "These categories have no time order, so the filled shape suggests a trend that isn't there.",
+  doughnut: "Slices are compared by angle, which is less exact than bar length. Fine for share, weak for close values.",
+  radar: "Spoke lengths are hard to compare across a circle. Use it to spot an uneven profile, not to rank.",
+  bar: "Bars work for any ranking, but this question is about share of the whole.",
+};
+
+function axisFmt(v, kind) {
+  if (kind === "usd") return v >= 1e6 ? "$" + +(v / 1e6).toFixed(v % 1e6 ? 1 : 0) + "M" : v >= 1e3 ? "$" + Math.round(v / 1e3) + "K" : "$" + Math.round(v);
+  if (kind === "pct") return Math.round(v * 100) + "%";
+  if (kind === "weeks") return +v.toFixed(1) + " wks";
+  return v >= 1e3 ? +(v / 1e3).toFixed(1) + "K" : String(Math.round(v));
+}
+function niceTicks(max, count = 4) {
+  if (max <= 0) return [0];
+  const raw = max / count, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(s => s * mag).find(s => s >= raw);
+  const ticks = []; for (let t = 0; t <= max + step * 0.001; t += step) ticks.push(t);
+  if (ticks[ticks.length - 1] < max) ticks.push(ticks[ticks.length - 1] + step);
+  return ticks;
+}
+const clip = (s, n) => (s = String(s), s.length > n ? s.slice(0, n - 1) + "…" : s);
+
+function ChartTypeMenu({ value, rec, result, onChange }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const down = e => { if (box.current && !box.current.contains(e.target)) setOpen(false); };
+    const key = e => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", down); window.addEventListener("keydown", key);
+    return () => { document.removeEventListener("mousedown", down); window.removeEventListener("keydown", key); };
+  }, [open]);
+  const cur = CHART_TYPES.find(t => t.key === value);
+  const ico = d => html`<svg className="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d=${d} /></svg>`;
+  return html`<div className="ct-menu" ref=${box}>
+    <button type="button" className=${"ct-btn" + (open ? " open" : "")} onClick=${() => setOpen(!open)} aria-haspopup="listbox" aria-expanded=${open} aria-label=${"Chart type: " + cur.label}>
+      ${ico(cur.icon)}<span>${cur.label}</span>${value === rec && html`<span className="ct-rec-dot" title="Recommended"></span>`}<${Icon} n="caret" s=${14} />
+    </button>
+    ${open && html`<div className="pop ct-pop" role="listbox" aria-label="Chart type">
+      <div className="pop-h">Chart type</div>
+      ${CHART_TYPES.map(t => { const a = chartAvailability(result, t.key); return html`<button type="button" key=${t.key} role="option" aria-selected=${value === t.key}
+          className=${"opt ct-opt" + (value === t.key ? " on" : "")} disabled=${a.disabled} onClick=${() => { onChange(t.key); setOpen(false); }}>
+          <span className="ct-ico">${ico(t.icon)}</span>
+          <span className="opt-main"><span className="ct-name">${t.label}${t.key === rec && html`<span className="ct-rec">Recommended</span>`}</span><span className="opt-sub">${a.note}</span></span>
+          ${value === t.key && html`<${Icon} n="check" s=${14} />`}
+        </button>`; })}
+    </div>`}
+  </div>`;
+}
+
+function ChartPanel({ result, type, setType }) {
+  const rec = useMemo(() => recommendChart(result), [result]);
+  const chosen = type && !chartAvailability(result, type).disabled ? type : rec.key;
+  const { label, fmt } = result.chart;
+  return html`<div className="chart">
+    <div className="chart-head">
+      <div className="chart-title"><span>${label}</span>${result.rows.length > 10 && html`<span className="muted">Top 10 of ${result.rows.length}</span>`}</div>
+      <${ChartTypeMenu} value=${chosen} rec=${rec.key} result=${result} onChange=${setType} />
+    </div>
+    ${chosen === "bar" && html`<${BarChart} result=${result} />`}
+    ${(chosen === "line" || chosen === "area") && html`<${LineChart} result=${result} area=${chosen === "area"} />`}
+    ${chosen === "doughnut" && html`<${DoughnutChart} result=${result} />`}
+    ${chosen === "radar" && html`<${RadarChart} result=${result} />`}
+    <p className=${"chart-note" + (chosen === rec.key ? "" : " warn")}>${chosen === rec.key
+      ? html`<span className="ct-rec">Recommended</span> ${rec.why}`
+      : html`${CHART_CAVEAT[chosen]} <button type="button" className="link-btn" onClick=${() => setType(rec.key)}>Back to ${CHART_TYPES.find(t => t.key === rec.key).label.toLowerCase()}</button>`}</p>
+  </div>`;
+}
+
+function BarChart({ result }) {
+  const { key, fmt, lowIsBad } = result.chart;
+  const rows = result.rows.slice(0, 10);
+  const max = Math.max(...rows.map(r => r[key]), 0.0001);
+  const nameKey = result.columns[0].key;
+  return html`<div className="bars" role="img" aria-label=${result.chart.label + " bar chart"}>${rows.map((r, i) => {
+    const pct = Math.max(1.5, (r[key] / max) * 100), bad = lowIsBad && r[key] < 2;
+    return html`<div className="bar-row" key=${i}>
+      <div className="bar-label" title=${r[nameKey]}>${r[nameKey]}</div>
+      <div className="bar-track"><div className=${"bar" + (bad ? " bar-bad" : "") + (i === 0 && !lowIsBad ? " bar-lead" : "")} style=${{ width: pct + "%", animationDelay: i * 40 + "ms" }}></div></div>
+      <div className="bar-val">${ENGINE.fmt(r[key], fmt)}</div>
+    </div>`; })}</div>`;
+}
+
+function Tip({ x, name, value, w }) {
+  const left = Math.min(Math.max(x, 70), w - 70);
+  return html`<div className="ch-tip" style=${{ left: (left / w * 100) + "%" }}><strong>${value}</strong><span>${name}</span></div>`;
+}
+
+function LineChart({ result, area }) {
+  const { key, fmt } = result.chart;
+  const rows = result.rows.slice(0, 10), nameKey = result.columns[0].key;
+  const [hi, setHi] = useState(null);
+  const W = 640, H = 300, L = 76, R = 20, T = 16, B = 86;
+  const ticks = niceTicks(Math.max(...rows.map(r => r[key]))), top = ticks[ticks.length - 1] || 1;
+  const x = i => rows.length === 1 ? (L + W - R) / 2 : L + (i * (W - L - R)) / (rows.length - 1);
+  const y = v => T + (1 - v / top) * (H - T - B);
+  const pts = rows.map((r, i) => [x(i), y(r[key])]);
+  const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  const band = (W - L - R) / Math.max(rows.length - 1, 1);
+  return html`<div className="ch-wrap" onMouseLeave=${() => setHi(null)}>
+    <svg viewBox=${`0 0 ${W} ${H}`} className="ch-svg" role="img" aria-label=${result.chart.label + (area ? " area chart" : " line chart")}>
+      ${ticks.map(t => html`<g key=${t}><line x1=${L} x2=${W - R} y1=${y(t)} y2=${y(t)} className="ch-grid" /><text x=${L - 8} y=${y(t) + 4} className="ch-axis" textAnchor="end">${axisFmt(t, fmt)}</text></g>`)}
+      ${area && html`<path d=${line + ` L${x(rows.length - 1)} ${y(0)} L${x(0)} ${y(0)} Z`} className="ch-area" />`}
+      <path d=${line} className="ch-line" />
+      ${hi != null && html`<line x1=${pts[hi][0]} x2=${pts[hi][0]} y1=${T} y2=${H - B} className="ch-cross" />`}
+      ${pts.map((p, i) => html`<circle key=${i} cx=${p[0]} cy=${p[1]} r=${hi === i ? 6 : 4.5} className="ch-dot" />`)}
+      ${rows.map((r, i) => html`<text key=${"l" + i} className="ch-axis" textAnchor="end" transform=${`translate(${x(i) + 4},${H - B + 16}) rotate(-40)`}>${clip(r[nameKey], 14)}</text>`)}
+      ${rows.map((r, i) => html`<rect key=${"h" + i} x=${x(i) - band / 2} y=${T} width=${band} height=${H - T - B} className="ch-hit" tabIndex="0"
+        onMouseEnter=${() => setHi(i)} onFocus=${() => setHi(i)} onBlur=${() => setHi(null)} />`)}
+    </svg>
+    ${hi != null && html`<${Tip} x=${pts[hi][0]} w=${W} name=${rows[hi][nameKey]} value=${ENGINE.fmt(rows[hi][key], fmt)} />`}
+  </div>`;
+}
+
+function DoughnutChart({ result }) {
+  const { key, fmt, label } = result.chart;
+  const nameKey = result.columns[0].key;
+  const [hi, setHi] = useState(null);
+  const sorted = [...result.rows].sort((a, b) => b[key] - a[key]);
+  let parts = sorted.slice(0, 6).map((r, i) => ({ name: r[nameKey], v: r[key], c: "cat-" + (i + 1) }));
+  if (sorted.length > 6) parts.push({ name: `Other (${sorted.length - 6})`, v: sorted.slice(6).reduce((s, r) => s + r[key], 0), c: "cat-other" });
+  const total = parts.reduce((s, p) => s + p.v, 0) || 1;
+  const S = 220, cx = S / 2, R = 92, r = 62, gap = 0.012;
+  let a0 = -Math.PI / 2;
+  const arcs = parts.map(p => {
+    const sweep = (p.v / total) * Math.PI * 2, s = a0 + (parts.length > 1 ? gap : 0), e = a0 + sweep - (parts.length > 1 ? gap : 0);
+    a0 += sweep;
+    const big = e - s > Math.PI ? 1 : 0, P = (rad, a) => [cx + rad * Math.cos(a), cx + rad * Math.sin(a)];
+    const [x1, y1] = P(R, s), [x2, y2] = P(R, e), [x3, y3] = P(r, e), [x4, y4] = P(r, s);
+    const d = parts.length === 1 ? `M${cx} ${cx - R}A${R} ${R} 0 1 1 ${cx - 0.01} ${cx - R}L${cx - 0.01} ${cx - r}A${r} ${r} 0 1 0 ${cx} ${cx - r}Z`
+      : `M${x1} ${y1}A${R} ${R} 0 ${big} 1 ${x2} ${y2}L${x3} ${y3}A${r} ${r} 0 ${big} 0 ${x4} ${y4}Z`;
+    return { ...p, d, share: p.v / total };
+  });
+  const h = hi != null ? arcs[hi] : null;
+  return html`<div className="dn-wrap">
+    <svg viewBox=${`0 0 ${S} ${S}`} className="dn-svg" role="img" aria-label=${label + " doughnut chart"} onMouseLeave=${() => setHi(null)}>
+      ${arcs.map((a, i) => html`<path key=${i} d=${a.d} className=${"dn-seg " + a.c + (hi != null && hi !== i ? " dim" : "")} tabIndex="0"
+        onMouseEnter=${() => setHi(i)} onFocus=${() => setHi(i)} onBlur=${() => setHi(null)}><title>${a.name}: ${ENGINE.fmt(a.v, fmt)} (${Math.round(a.share * 100)}%)</title></path>`)}
+      <text x=${cx} y=${cx - 4} className="dn-val" textAnchor="middle">${h ? Math.round(h.share * 100) + "%" : ENGINE.fmt(total, fmt)}</text>
+      <text x=${cx} y=${cx + 16} className="dn-sub" textAnchor="middle">${h ? clip(h.name, 18) : "Total " + label.toLowerCase()}</text>
+    </svg>
+    <ul className="dn-legend">${arcs.map((a, i) => html`<li key=${i} className=${hi === i ? "on" : ""} onMouseEnter=${() => setHi(i)} onMouseLeave=${() => setHi(null)}>
+      <span className=${"dn-sw " + a.c}></span><span className="dn-name" title=${a.name}>${a.name}</span><span className="dn-num">${ENGINE.fmt(a.v, fmt)}</span><span className="dn-pct">${Math.round(a.share * 100)}%</span></li>`)}</ul>
+  </div>`;
+}
+
+function RadarChart({ result }) {
+  const { key, fmt, label } = result.chart;
+  const rows = result.rows.slice(0, 10), nameKey = result.columns[0].key;
+  const [hi, setHi] = useState(null);
+  const W = 460, H = 330, cx = W / 2, cy = H / 2 + 4, R = 112;
+  const max = Math.max(...rows.map(r => r[key])) || 1;
+  const ang = i => -Math.PI / 2 + (i * Math.PI * 2) / rows.length;
+  const P = (rad, i) => [cx + rad * Math.cos(ang(i)), cy + rad * Math.sin(ang(i))];
+  const pts = rows.map((r, i) => P((r[key] / max) * R, i));
+  const ring = f => rows.map((_, i) => P(R * f, i).map(n => n.toFixed(1)).join(",")).join(" ");
+  return html`<div className="ch-wrap" onMouseLeave=${() => setHi(null)}>
+    <svg viewBox=${`0 0 ${W} ${H}`} className="ch-svg radar" role="img" aria-label=${label + " radar chart"}>
+      ${[0.25, 0.5, 0.75, 1].map(f => html`<polygon key=${f} points=${ring(f)} className="ch-grid" fill="none" />`)}
+      ${rows.map((_, i) => { const [x2, y2] = P(R, i); return html`<line key=${"s" + i} x1=${cx} y1=${cy} x2=${x2} y2=${y2} className="ch-grid" />`; })}
+      <polygon points=${pts.map(p => p.join(",")).join(" ")} className="ch-area" />
+      <polygon points=${pts.map(p => p.join(",")).join(" ")} className="ch-line" />
+      ${pts.map((p, i) => html`<circle key=${"d" + i} cx=${p[0]} cy=${p[1]} r=${hi === i ? 6 : 4.5} className="ch-dot" tabIndex="0"
+        onMouseEnter=${() => setHi(i)} onFocus=${() => setHi(i)} onBlur=${() => setHi(null)}><title>${rows[i][nameKey]}: ${ENGINE.fmt(rows[i][key], fmt)}</title></circle>`)}
+      ${rows.map((r, i) => { const c = Math.cos(ang(i)), [x, y] = P(R + (Math.abs(c) < 0.2 ? 20 : 14), i);
+        return html`<text key=${"t" + i} x=${x} y=${y + 4} className=${"ch-axis" + (hi === i ? " hi" : "")} textAnchor=${Math.abs(c) < 0.2 ? "middle" : c > 0 ? "start" : "end"}>${clip(r[nameKey], 14)}</text>`; })}
+      <text x=${cx + 6} y=${cy - R * 0.75 + 4} className="ch-axis faint">${axisFmt(max * 0.75, fmt)}</text>
+    </svg>
+    ${hi != null && html`<div className="ch-tip static"><strong>${ENGINE.fmt(rows[hi][key], fmt)}</strong><span>${rows[hi][nameKey]}</span></div>`}
+  </div>`;
+}
+
+function AnswerCard({ msg, onAsk, onRetry, onFlag, onRerun, notesFirst, howToken }) {
+  const r = msg.result;
+  const [tab, setTab] = useState(r.rows.length > 1 ? "Table" : "Table");
+  const [how, setHow] = useState(!!msg.openHow);
+  const seenHow = useRef(howToken);
+  useEffect(() => { if (howToken !== seenHow.current) { seenHow.current = howToken; if (notesFirst) setHow(true); } }, [howToken]);
+  const segRef = useRef(null);
+  const [csv, setCsv] = useState(false);
+  const [chartType, setChartType] = useState(null);
+  const streaming = msg.status === "streaming";
+  const [roll, setRoll] = useState(0);
+  const shown = streaming ? r.lead.slice(0, msg.chars) : r.lead;
+  const pool = r.related;
+  const related = pool.length > 3 ? [0, 1, 2].map(i => pool[(roll * 3 + i) % pool.length]) : pool;
+  return html`<div className="ans-wrap"><article className="card answer">
+    <header className="ans-head">
+      <h3>${r.title}</h3>
+      <div className="thought"><${Icon} n="sparkle" s=${12} className="spark" />Thought for ${msg.secs} seconds</div>
+      ${msg.edits && html`<div className="edited"><${Icon} n="edit" s=${12} />Edited query: ${msg.edits.join(" · ")}</div>`}
+    </header>
+    <div className="ans-body">
+      <p className="lead">${shown}${streaming && html`<span className="caret"></span>`}${!streaming && notesFirst && html`<${Note} n="3" title="Answer first, evidence second">A one-line takeaway with the number in it comes before any table. A design manager or a VP should get the point without reading a grid.<//>`}</p>
+      ${!streaming && r.bullets && r.bullets.length > 1 && html`<ul className="bullets">${r.bullets.slice(0, 4).map((b, i) => html`<li key=${i}>${b}</li>`)}</ul>`}
+    </div>
+    ${!streaming && html`<div className="reveal">
+      <div className="seg-row" ref=${segRef}>
+        <div className="seg" role="tablist">${["Table", "Chart", "SQL"].map(t => html`<button key=${t} role="tab" aria-selected=${tab === t} className=${tab === t ? "on" : ""} onClick=${() => setTab(t)}>${t}</button>`)}</div>${notesFirst && html`<${Note} n="4" title="Compiled SQL is one tap away">The assistant never writes SQL. It queries the semantic layer, which compiles SQL from certified definitions. Analysts still want to audit that, so the compiled SQL sits beside Table and Chart rather than in a debug drawer.<//>`}
+      </div>
+      ${tab === "Table" && html`<${ResultTable} result=${r} />`}
+      ${tab === "Chart" && html`<${ChartPanel} result=${r} type=${chartType} setType=${setChartType} />`}
+      ${tab === "SQL" && html`<${Sql} sql=${r.sql} />`}
+      <div className="actions">
+        <button className="ghost-btn" onClick=${async () => { await copyText(toCsv(r.columns, r.rows)); setCsv(true); setTimeout(() => setCsv(false), 1500); }}><${Icon} n=${csv ? "check" : "copy"} s=${12} />${csv ? "Copied" : "Copy as CSV"}</button>
+        <button className=${"ghost-btn" + (how ? " active" : "")} onClick=${() => setHow(!how)} aria-expanded=${how}><${Icon} n="info" s=${12} />How I got this</button>
+        <span className="spacer"></span>
+        <button className=${"icon-btn" + (msg.flagged ? " flagged" : "")} onClick=${onFlag} aria-label="Flag this answer" title=${msg.flagged ? "Flagged for review" : "Flag for review"}><${Icon} n="flag" s=${12} /></button>
+        <button className="icon-btn" onClick=${onRetry} aria-label="Run again" title="Run again"><${Icon} n="retry" s=${12} /></button>
+      </div>
+      ${how && html`<div className="how">
+        <div className="how-sec">
+          <span className="eyebrow">What I understood${notesFirst && html`<${Note} n="5" title="Three questions hide behind “is this right?”">Did it understand me? The chips answer that in five seconds. Is the metric defined the way I think? Hover the metric for its definition, owner and certification, which is where most real disagreements start. Is the SQL right? Only analysts ask that, so SQL keeps its own tab and a link at the bottom of this panel. Raw JSON never shows: it's an implementation detail.<//>`}</span>
+          <${QueryChips} result=${r} data=${CARS} onRerun=${onRerun} note=${notesFirst && html`<${Note} n="6" title="Fix the chip, not the prompt">If the assistant picked the wrong breakdown or filter, users correct that chip and rerun instead of rephrasing and hoping. Editing the semantic query keeps governance intact; editing SQL directly would bypass the certified metric definitions.<//>`} />
+        </div>
+        ${r.assumptions.length > 0 && html`<div className="how-sec"><span className="eyebrow">Good to know</span><ul>${r.assumptions.map((x, i) => html`<li key=${i}>${x}</li>`)}</ul></div>`}
+        <button type="button" className="sql-link" onClick=${() => { setTab("SQL"); setTimeout(() => segRef.current && segRef.current.scrollIntoView({ block: "nearest", behavior: "smooth" }), 0); }}><${Icon} n="code" s=${14} />For analysts: see the SQL the semantic layer compiled<${Icon} n="chev" s=${12} /></button>
+      </div>`}
+      <div className="related">
+        <div className="related-h"><${Icon} n="list" s=${12} />Related${notesFirst && html`<${Note} n="7" title="Follow-ups keep context">Suggestions like “Now only the West” reuse the previous grouping and filters, so a conversation narrows down instead of starting over each time. Try one.<//>`}</div>
+        ${related.map((q, i) => html`<button key=${q} className="related-q" onClick=${() => onAsk(q)}>${q}<${Icon} n="chev" s=${12} /></button>`)}
+        ${pool.length > 3 && html`<button className="reroll" onClick=${() => setRoll(roll + 1)}><${Icon} n="dice" s=${16} />Re-roll suggestions</button>`}
+      </div>
+    </div>`}
+  </article>
+  <footer className="meta"><span>${msg.time}</span><span><${Icon} n="tree" s=${10} />Northline Sales</span><span><${Icon} n="gauge" s=${12} />${msg.tokens.toLocaleString()} tokens used</span>${msg.flagged && html`<span className="flag-meta">Flagged for review</span>`}</footer>
+  </div>`;
+}
+
+function ClarifyCard({ msg, onAsk, answered, showNote }) {
+  const r = msg.result;
+  return html`<article className="card soft">
+    <div className="soft-head"><span className="badge accent"><${Icon} n="sparkle" s=${13} />Quick check</span>${showNote && html`<${Note} n="8" title="Ask once, with options">Guessing what “best” means risks a confident, wrong answer. One question with three tappable definitions costs a second; a wrong chart in a board deck costs a lot more.<//>`}</div>
+    <p className="lead">${r.text}</p>
+    <div className="choices">${r.options.map((o, i) => html`<button key=${i} className="choice" disabled=${answered} onClick=${() => onAsk(o.q)}><strong>${o.label}</strong><span>${o.hint}</span></button>`)}</div>
+  </article>`;
+}
+
+function UnknownCard({ msg, onAsk }) {
+  const r = msg.result;
+  return html`<article className="card soft">
+    <p className="lead">${r.text}</p>
+    <div className="try-h">Try one of these</div>
+    <div className="chips">${r.options.map((o, i) => html`<button key=${i} className="chip" onClick=${() => onAsk(o.q)}>${o.label}</button>`)}</div>
+  </article>`;
+}
+
+function EmptyCard({ msg, onAsk, showNote }) {
+  const r = msg.result;
+  const [sql, setSql] = useState(false);
+  return html`<article className="card soft empty">
+    <div className="empty-ic"><${Icon} n="search" s=${18} /></div>
+    <div className="empty-body">
+      <p className="lead">${r.text}</p>
+      <p className="why">${r.why}${showNote && html`<${Note} n="9" title="Zero rows is an answer, not an error">An empty table with headers looks like a bug. The assistant explains why nothing matched and offers the nearest question that does have data.<//>`}</p>
+      <div className="chips">${r.options.map((o, i) => html`<button key=${i} className="chip" onClick=${() => onAsk(o.q)}>${o.label}</button>`)}
+        <button className="chip quiet" onClick=${() => setSql(!sql)}>${sql ? "Hide" : "Show"} the compiled SQL</button></div>
+      ${sql && html`<${Sql} sql=${r.sql} />`}
+    </div>
+  </article>`;
+}
+
+/* ---------- user bubble with edit ---------- */
+function UserBubble({ msg, onEdit, busy }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(msg.text);
+  if (editing) return html`<div className="u-row"><div className="bubble editing">
+    <textarea id=${"edit-" + msg.id} value=${val} onChange=${e => setVal(e.target.value)} rows="2" autoFocus onKeyDown=${e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (val.trim()) { setEditing(false); onEdit(val.trim()); } } if (e.key === "Escape") setEditing(false); }}></textarea>
+    <div className="edit-actions"><button className="ghost-btn" onClick=${() => { setEditing(false); setVal(msg.text); }}>Cancel</button><button className="primary-btn" disabled=${!val.trim()} onClick=${() => { setEditing(false); onEdit(val.trim()); }}>Update answer</button></div>
+  </div></div>`;
+  return html`<div className="u-row">
+    ${!busy && html`<button className="icon-btn edit-btn" onClick=${() => { setVal(msg.text); setEditing(true); }} aria-label="Edit question" title="Edit question"><${Icon} n="edit" /></button>`}
+    <div className="bubble">${msg.text}</div>
+  </div>`;
+}
+
+/* ---------- data viewer ---------- */
+function DataModal({ onClose }) {
+  useEffect(() => { const k = e => e.key === "Escape" && onClose(); window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, []);
+  const cols = ["id", "make", "model", "variant", "fuel_type", "color", "region", "manufacturing_price", "selling_price", "quantity_sold", "quantity_in_stock"];
+  const money = c => c.endsWith("price");
+  return html`<div className="scrim" onClick=${onClose}><div className="modal" role="dialog" aria-modal="true" aria-label="cars table" onClick=${e => e.stopPropagation()}>
+    <header className="modal-h"><div><h3><${Icon} n="db" s=${16} /> cars</h3><p className="muted">60 rows · fictional US dealer group, Q3 2026 · every answer in this prototype is computed from this table</p></div><button className="icon-btn" onClick=${onClose} aria-label="Close"><${Icon} n="x" /></button></header>
+    <div className="modal-body"><table className="tbl dense"><thead><tr>${cols.map(c => html`<th key=${c} className=${typeof CARS[0][c] === "number" ? "num" : ""}>${c}</th>`)}</tr></thead>
+      <tbody>${CARS.map(r => html`<tr key=${r.id}>${cols.map(c => html`<td key=${c} className=${typeof r[c] === "number" ? "num" : ""}>${money(c) ? "$" + r[c].toLocaleString() : r[c]}</td>`)}</tr>`)}</tbody></table></div>
+  </div></div>`;
+}
+
+/* ---------- shell ---------- */
+const NAV = ["Ingestion", "IDE", "Jobs", "Semantic layer", "BI", "Conversational AI"];
+const NAV_BOTTOM = ["Architecture", "Utilization", "Team", "Settings", "Community", "Help"];
+const NavItem = ({ label, on }) => html`<li><a href="#" onClick=${e => e.preventDefault()} className=${on ? "on" : ""} aria-current=${on ? "page" : null} title=${label} aria-label=${label}><${NavIcon} name=${label} /><span className="nav-label">${label}</span></a></li>`;
+const HISTORY = [
+  ["Today", ["Compare sales of electric variants across different regions", "Which cars are running low on stock?"]],
+  ["Yesterday", ["What's the gross margin by make?", "Which colors sell best in the West?", "Top 5 models by revenue"]],
+  ["Sep 29", ["How many Tesla cars did we sell by color?", "Revenue by fuel type in the Midwest", "Average selling price by model"]],
+];
+
+function App() {
+  const [msgs, setMsgs] = useState(() => seedConversation());
+  const [input, setInput] = useState("");
+  const [notes, setNotes] = useState(false);
+  const [navMin, setNavMin] = useState(() => { try { return localStorage.getItem("nav-collapsed") === "1"; } catch (e) { return false; } });
+  const toggleNav = () => setNavMin(v => { try { localStorage.setItem("nav-collapsed", v ? "0" : "1"); } catch (e) {} return !v; });
+  const [openNote, setOpenNote] = useState(null);
+  const [howToken, setHowToken] = useState(0);
+  const noteAnchor = useRef(null);
+  useEffect(() => {
+    if (!openNote) return;
+    const down = e => { if (!e.target.closest || !e.target.closest(".hs, .hs-pop")) setOpenNote(null); };
+    const key = e => {
+      if (e.key === "Escape") setOpenNote(null);
+      const typing = e.target && /^(TEXTAREA|INPUT)$/.test(e.target.tagName);
+      if (!typing && e.key === "ArrowRight" && +openNote < NOTE_TOTAL) { e.preventDefault(); goToDecision(+openNote + 1); }
+      if (!typing && e.key === "ArrowLeft" && +openNote > 1) { e.preventDefault(); goToDecision(+openNote - 1); }
+    };
+    document.addEventListener("mousedown", down); window.addEventListener("keydown", key);
+    return () => { document.removeEventListener("mousedown", down); window.removeEventListener("keydown", key); };
+  }, [openNote]);
+  const [dataOpen, setDataOpen] = useState(false);
+  const [tab, setTab] = useState("My chats");
+  const [activeChat, setActiveChat] = useState(HISTORY[0][1][0]);
+  const [synced, setSynced] = useState("4 hours ago");
+  const [listen, setListen] = useState(null);
+  const [clock, setClock] = useState(0);
+  const [fromVoice, setFromVoice] = useState(false);
+  const [micLevel, pulseMic] = useLevel();
+  const listenTimers = useRef([]);
+  const voiceTurn = useRef(0);
+  const textareaRef = useRef(null);
+  const [appsOpen, setAppsOpen] = useState(true);
+  const scroller = useRef(null);
+  const busy = msgs.some(m => m.status === "thinking" || m.status === "streaming");
+
+  useEffect(() => { const el = scroller.current; if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" }); }, [msgs.length, busy]);
+
+  /* ----- decision tour: put the prototype into the state each decision lives in ----- */
+  const TOUR_Q = { main: ENGINE.STARTERS[0], clarify: "Which models are doing best?", empty: "Show diesel trucks sold in the West" };
+  const isDone = (m, kind) => m.role === "assistant" && m.result && m.result.kind === kind && m.status === "done";
+  function doneTurn(q, list) {
+    const result = ENGINE.run(q, CARS, lastParsed(list));
+    return [{ id: uid(), role: "user", text: q }, { id: uid(), role: "assistant", status: "done", result, secs: 5, chars: result.lead ? result.lead.length : 0, time: nowLabel(), tokens: 1100 + Math.floor(Math.random() * 400) }];
+  }
+  function releaseHeld(list) { return list.map(m => m.held ? { ...m, held: false, status: "done", chars: m.result.lead ? m.result.lead.length : 0 } : m); }
+  function tourState(n) {
+    if (n === 1) return [];
+    if (n === 2) {
+      if (msgs.some(m => m.held)) return msgs;
+      const q = msgs.length ? ENGINE.STARTERS[1] : TOUR_Q.main;
+      const result = ENGINE.run(q, CARS, lastParsed(msgs));
+      return [...msgs, { id: uid(), role: "user", text: q }, { id: uid(), role: "assistant", status: "thinking", stage: 1, held: true, result, secs: 5, chars: 0, time: nowLabel(), tokens: 1200 }];
+    }
+    let list = releaseHeld(msgs);
+    if (n === 10) return list;
+    if (!list.some(m => isDone(m, "answer"))) list = [...list, ...doneTurn(TOUR_Q.main, list)];
+    if (n === 8 && !list.some(m => isDone(m, "clarify"))) list = [...list, ...doneTurn(TOUR_Q.clarify, list)];
+    if (n === 9 && !list.some(m => isDone(m, "empty"))) list = [...list, ...doneTurn(TOUR_Q.empty, list)];
+    return list;
+  }
+  const tourPending = useRef(null);
+  useEffect(() => {
+    if (openNote === "2" || tourPending.current === 2) return;
+    if (msgs.some(m => m.held)) setMsgs(ms => releaseHeld(ms));
+  }, [openNote, msgs]);
+  function goToDecision(n) {
+    if (n < 1 || n > NOTE_TOTAL) return;
+    tourPending.current = n;
+    cancelListening();
+    setOpenNote(null);
+    setMsgs(tourState(n));
+    if (n === 5 || n === 6) setHowToken(t => t + 1);
+    let tries = 0;
+    const show = () => {
+      const el = document.querySelector('[data-hs="' + n + '"]');
+      if (!el && tries++ < 8) { setTimeout(show, 60); return; }
+      if (el) el.scrollIntoView({ block: "center", behavior: "auto" });
+      setOpenNote(String(n));
+      tourPending.current = null;
+    };
+    setTimeout(show, 80);
+  }
+
+  function lastParsed(list) {
+    for (let i = list.length - 1; i >= 0; i--) if (list[i].result && list[i].result.kind === "answer") return list[i].result.parsed;
+    return null;
+  }
+
+  function ask(q, base, opts = {}) {
+    if (!q.trim() || busy) return;
+    const list = base || msgs;
+    const prev = lastParsed(list);
+    const aid = uid();
+    const result = ENGINE.run(q, CARS, prev);
+    const secs = 5;
+    const next = [...list, { id: uid(), role: "user", text: q, voice: !!opts.voice }, { id: aid, role: "assistant", status: "thinking", stage: 0, result, secs, chars: 0, time: nowLabel(), tokens: 900 + Math.floor(Math.random() * 700) + (result.sql ? result.sql.length : 0) }];
+    setMsgs(next);
+    setInput("");
+    setFromVoice(false);
+    animate(aid, result);
+  }
+
+  function rerunAt(index, parsed, changes) {
+    if (busy) return;
+    const result = ENGINE.execute(parsed, CARS);
+    const aid = uid();
+    const msg = { id: aid, role: "assistant", status: "thinking", stage: 0, result, secs: 5, chars: 0, time: nowLabel(), edits: changes, openHow: true, tokens: 600 + Math.floor(Math.random() * 300) + (result.sql ? result.sql.length : 0) };
+    setMsgs(ms => ms.map((m, i) => i === index ? msg : m));
+    animate(aid, result);
+  }
+
+  function animate(aid, result) {
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const upd = patch => setMsgs(ms => ms.map(m => m.id === aid ? { ...m, ...(typeof patch === "function" ? patch(m) : patch) } : m));
+    const stages = result.kind === "answer" ? STAGES.length : 2;
+    const THINK_MS = 5000, stepMs = reduce ? 50 : THINK_MS / stages;
+    let s = 0;
+    const tick = () => {
+      s++;
+      if (s < stages) { upd({ stage: s }); setTimeout(tick, stepMs); return; }
+      if (result.kind !== "answer") { upd({ status: "done" }); return; }
+      upd({ status: "streaming", chars: 0 });
+      const total = result.lead.length;
+      const step = () => upd(m => {
+        const c = Math.min(total, m.chars + (reduce ? total : 4 + Math.floor(Math.random() * 5)));
+        if (c < total) setTimeout(step, 22);
+        return { chars: c, status: c >= total ? "done" : "streaming" };
+      });
+      step();
+    };
+    setTimeout(tick, stepMs);
+  }
+
+  /* ----- simulated dictation ----- */
+  const VOICE_SCRIPT = ["Which models are driving revenue in the West?", "Show me cars that are running low on stock", "What does gross margin look like by make?", "How many Teslas did we sell by color?", "Break down revenue by fuel type in the Northeast"];
+  function nextScript() {
+    const asked = new Set(msgs.filter(m => m.role === "user").map(m => m.text.toLowerCase()));
+    const last = [...msgs].reverse().find(m => m.result && m.result.kind === "answer");
+    const pool = [...(last ? last.result.related.filter(q => !/^Now only|^Break .* down by/i.test(q)) : []), ...VOICE_SCRIPT];
+    const fresh = pool.filter(q => !asked.has(q.toLowerCase()));
+    const list = fresh.length ? fresh : VOICE_SCRIPT;
+    return list[voiceTurn.current++ % list.length];
+  }
+  function clearListenTimers() { listenTimers.current.forEach(clearTimeout); listenTimers.current = []; }
+  function startListening() {
+    if (busy || listen) return;
+    const words = nextScript().split(" ");
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setListen({ words, n: 0, prev: input, t0: Date.now() });
+    let t = reduce ? 200 : 900;
+    words.forEach((w, i) => {
+      t += reduce ? 60 : 170 + Math.random() * 190 + (/[,?]$/.test(words[i - 1] || "") ? 250 : 0);
+      listenTimers.current.push(setTimeout(() => { pulseMic(0.55, 1); setListen(l => l && { ...l, n: i + 1 }); }, t));
+    });
+    listenTimers.current.push(setTimeout(() => finishListening(true), t + (reduce ? 200 : 1000)));
+  }
+  function finishListening(auto) {
+    clearListenTimers();
+    setListen(l => {
+      if (!l) return null;
+      const n = auto ? l.words.length : l.n;
+      if (n === 0) { setInput(l.prev); return null; }
+      setInput(l.words.slice(0, n).join(" "));
+      setFromVoice(true);
+      setTimeout(() => { const el = textareaRef.current; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 0);
+      return null;
+    });
+  }
+  function cancelListening() { clearListenTimers(); setListen(l => { if (l) setInput(l.prev); return null; }); }
+  useEffect(() => {
+    if (!listen) return;
+    const k = e => { if (e.key === "Escape") cancelListening(); if (e.key === "Enter") { e.preventDefault(); finishListening(false); } };
+    const iv = setInterval(() => setClock(c => c + 1), 250);
+    window.addEventListener("keydown", k);
+    return () => { window.removeEventListener("keydown", k); clearInterval(iv); };
+  }, [!!listen]);
+  useEffect(() => clearListenTimers, []);
+
+
+  function editAt(index, text) { ask(text, msgs.slice(0, index)); }
+  function retryAt(index) { const u = msgs[index - 1]; ask(u.text, msgs.slice(0, index - 1)); }
+  function flagAt(id) { setMsgs(ms => ms.map(m => m.id === id ? { ...m, flagged: !m.flagged } : m)); }
+  function newChat() { cancelListening(); setMsgs([]); setActiveChat(null); }
+  function openHistory(q) { cancelListening(); setActiveChat(q); setMsgs([]); setTimeout(() => ask(q, []), 0); }
+
+  // which answer carries the numbered notes: the first finished answer
+  const firstClarifyId = (msgs.find(m => isDone(m, "clarify")) || {}).id;
+  const firstEmptyId = (msgs.find(m => isDone(m, "empty")) || {}).id;
+  const firstAnswerId = (msgs.find(m => m.result && m.result.kind === "answer" && m.status !== "thinking") || {}).id;
+  const flaggedQs = msgs.map((m, i) => m.flagged ? msgs[i - 1].text : null).filter(Boolean);
+
+  return html`<${NotesCtx.Provider} value=${{ on: notes, openId: openNote, setOpenId: setOpenNote, goTo: goToDecision, anchorRef: noteAnchor }}>
+  <div className="app">
+    <nav className=${"nav" + (navMin ? " min" : "")} aria-label="Product">
+      <div className="nav-top">
+        <div className="brand"><${Logo} />
+          <button type="button" className="nav-toggle" onClick=${toggleNav} aria-label=${navMin ? "Expand navigation" : "Collapse navigation"} title=${navMin ? "Expand navigation" : "Collapse navigation"} aria-expanded=${!navMin}><${Icon} n=${navMin ? "panelOpen" : "panelClose"} s=${18} /></button>
+        </div>
+        <button className="ws" title="Northline Motors"><span className="ws-av">NM</span><span className="ws-name">Northline Motors</span></button>
+        <ul className="nav-list">${NAV.map(l => html`<${NavItem} key=${l} label=${l} on=${l === "Conversational AI"} />`)}</ul>
+        <div className="nav-sep"></div>
+        <button className="nav-group" onClick=${() => setAppsOpen(!appsOpen)} aria-expanded=${appsOpen}><${Icon} n="caret" s=${16} className=${appsOpen ? "flip" : ""} /><span className="nav-label">Data Apps</span></button>
+        ${(appsOpen || navMin) && html`<ul className="nav-list"><${NavItem} label="Manage apps" /></ul>`}
+      </div>
+      <div className="nav-foot">
+        <div className="nav-sep"></div>
+        <a href="#" onClick=${e => e.preventDefault()} className="trial" title="5 days left in your trial"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7" fill="none" stroke="#475467" strokeWidth="3" /><circle cx="9" cy="9" r="7" fill="none" stroke="#9E77ED" strokeWidth="3" strokeDasharray="44" strokeDashoffset="26" transform="rotate(-90 9 9)" strokeLinecap="round" /></svg><span className="nav-label">5 days left</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9 12h6M12.5 9l3 3-3 3" /></svg></a>
+        <ul className="nav-list">${NAV_BOTTOM.map(l => html`<${NavItem} key=${l} label=${l} />`)}</ul>
+      </div>
+    </nav>
+
+    <div className="work">
+      <header className="topbar">
+        <div className="tabs" role="tablist">${["My chats", "Team chats", "Flagged chats"].map(t => html`<button key=${t} role="tab" aria-selected=${tab === t} className=${tab === t ? "on" : ""} onClick=${() => setTab(t)}>${t}</button>`)}</div>
+        <div className="mobile-brand"><span className="brand sm"><${Logo} /></span><span className="hide-xs">Conversational AI</span></div>
+        <div className="top-actions">
+          <button className="icon-btn show-sm" onClick=${newChat} aria-label="New chat" title="New chat"><${Icon} n="plus" /></button>
+          <button className="ghost-btn" onClick=${() => setDataOpen(true)}><${Icon} n="db" s=${15} /><span className="hide-sm">View data</span></button>
+          <label className="switch"><input id="notes-toggle" type="checkbox" checked=${notes} onChange=${e => { setNotes(e.target.checked); setOpenNote(null); }} /><span className="track"><span className="knob"></span></span><span><span className="hide-sm">See design </span>decisions</span></label>
+        </div>
+      </header>
+
+      <div className="body">
+        <aside className="history" aria-label="Chat history">
+          <button className="new-chat" onClick=${newChat}><${Icon} n="chat" s=${16} />New chat</button>
+          ${tab === "My chats" && HISTORY.map(([g, qs]) => html`<div key=${g} className="h-group"><div className="h-label">${g}</div><div className="h-list">${qs.map(q => html`<button key=${q} className=${"h-item" + (activeChat === q ? " on" : "")} onClick=${() => openHistory(q)} title=${q}>${q}</button>`)}</div></div>`)}
+          ${tab === "Team chats" && html`<div className="h-group"><div className="h-label">Shared by your team</div><div className="h-list">${["Q3 revenue by region for the board pack", "Rivian margin vs other EVs", "Diesel demand in the South"].map(q => html`<button key=${q} className="h-item" onClick=${() => openHistory(q)} title=${q}>${q}</button>`)}</div></div>`}
+          ${tab === "Flagged chats" && html`<div className="h-group"><div className="h-label">Flagged for review</div><div className="h-list">${flaggedQs.length ? flaggedQs.map(q => html`<button key=${q} className="h-item" onClick=${() => openHistory(q)} title=${q}>${q}</button>`) : html`<p className="h-empty">Nothing flagged yet. Use the flag on any answer to send it to your data team for review.</p>`}</div></div>`}
+        </aside>
+
+        <main className="main">
+          <div className="thread" ref=${scroller}>
+            <div className="thread-in">
+              ${msgs.length === 0 && html`<div className="welcome">
+                <div className="welcome-ic"><${Icon} n="sparkle" s=${22} /></div>
+                <h2>Ask anything about Northline's car sales<${Note} n="1" title="Starters teach the scope">Four starters cover the four behaviours worth seeing: a comparison, a proactive alert, an ambiguous ask and a no-data case. They show what the assistant can do without a tutorial.<//></h2>
+                <p className="muted">Answers come from the <button className="link" onClick=${() => setDataOpen(true)}>cars table</button>: 60 vehicles across four US regions, Q3 2026.</p>
+                <div className="starters">${ENGINE.STARTERS.map(q => html`<button key=${q} className="starter" onClick=${() => ask(q)}>${q}<${Icon} n="chev" s=${14} /></button>`)}</div>
+              </div>`}
+              ${msgs.map((m, i) => {
+                if (m.role === "user") return html`<${UserBubble} key=${m.id} msg=${m} busy=${busy} onEdit=${t => editAt(i, t)} />`;
+                if (m.status === "thinking") return html`<${Thinking} key=${m.id} stage=${m.stage} />`;
+                const k = m.result.kind;
+                if (k === "answer") return html`<${AnswerCard} key=${m.id} msg=${m} notesFirst=${m.id === firstAnswerId} howToken=${howToken} onAsk=${ask} onRetry=${() => retryAt(i)} onFlag=${() => flagAt(m.id)} onRerun=${(p, changes) => rerunAt(i, p, changes)} />`;
+                if (k === "clarify") return html`<${ClarifyCard} key=${m.id} msg=${m} showNote=${m.id === firstClarifyId} onAsk=${ask} answered=${i < msgs.length - 1} />`;
+                if (k === "empty") return html`<${EmptyCard} key=${m.id} msg=${m} showNote=${m.id === firstEmptyId} onAsk=${ask} />`;
+                return html`<${UnknownCard} key=${m.id} msg=${m} onAsk=${ask} />`;
+              })}
+            </div>
+          </div>
+
+          <div className="composer-wrap">
+            <form className=${"composer" + (listen ? " is-listening" : "")} onSubmit=${e => { e.preventDefault(); ask(input, undefined, { voice: fromVoice }); }}>
+              <label htmlFor="q" className="sr">Ask a question</label>
+              ${listen ? html`<div className="transcript" aria-live="polite">
+                  ${listen.n === 0 ? html`<span className="ph">Go ahead, I'm listening…</span>` : html`<span>${listen.words.slice(0, Math.max(0, listen.n - 2)).join(" ")} </span><span className="interim">${listen.words.slice(Math.max(0, listen.n - 2), listen.n).join(" ")}</span>`}<span className="caret"></span>
+                </div>`
+                : html`<textarea id="q" ref=${textareaRef} rows="2" value=${input} placeholder="Ask about revenue, margin, stock… or tap the mic to speak" onChange=${e => { setInput(e.target.value); if (!e.target.value.trim()) setFromVoice(false); }} onKeyDown=${e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(input, undefined, { voice: fromVoice }); } }}></textarea>`}
+              <div className="composer-row">
+                ${listen ? html`<div className="capsule" role="status" aria-label="Listening">
+                    <${Orb} state="listening" volRef=${micLevel} size=${26} />
+                    <span className="cap-label">Listening</span>
+                    <span className="cap-time">${(() => { const s = Math.floor((Date.now() - listen.t0) / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); })()}</span>
+                    <span className="cap-demo" title="Dictation is simulated in this prototype">Demo</span>
+                  </div>`
+                : null}
+                <span className="spacer"></span>
+                <${Note} n="10" title="Voice lands in the box, not straight into a query">Dictated questions appear in the text box for a quick check before they run, because a misheard “West” or number gives a confident wrong chart. In this prototype the transcript is scripted; production would stream the microphone to ElevenLabs Scribe through a server that issues short-lived tokens.<//>
+                ${listen ? html`
+                  <button type="button" className="icon-btn" onClick=${cancelListening} aria-label="Cancel dictation" title="Cancel (Esc)"><${Icon} n="x" s=${16} /></button>
+                  <button type="button" className="send" onClick=${() => finishListening(false)} aria-label="Done speaking" title="Done (Enter)"><${Icon} n="check" s=${16} /></button>`
+                : html`
+                  ${fromVoice && input.trim() && html`<span className="voice-hint">Check the text, then send</span>`}
+                  <button type="button" className="icon-btn mic" onClick=${startListening} disabled=${busy} aria-label="Ask with your voice" title="Voice mode"><${Icon} n="mic" s=${18} /></button>
+                  <button type="submit" className="send" disabled=${!input.trim() || busy} aria-label="Send"><${Icon} n="arrowR" s=${16} /></button>`}
+              </div>
+            </form>
+            <div className="disclaimer">
+              <p>Remember to always double check responses as the model we use may occasionally make mistakes.</p>
+              <p className="sync-row">Semantic layer repositories were last synced ${synced} <button className="sync" onClick=${() => setSynced("just now")} disabled=${synced === "just now"}>${synced === "just now" ? "Synced" : "Sync now"}</button></p>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    ${dataOpen && html`<${DataModal} onClose=${() => setDataOpen(false)} />`}
+  </div>
+  <//>`;
+}
+
+function seedConversation() {
+  const q = ENGINE.STARTERS[0];
+  const result = ENGINE.run(q, CARS, null);
+  return [
+    { id: "u0", role: "user", text: q },
+    { id: "a0", role: "assistant", status: "done", result, secs: 5, chars: result.lead.length, time: nowLabel(), tokens: 1247 },
+  ];
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(html`<${App} />`);
+
+</script>
+
+</body></html>
