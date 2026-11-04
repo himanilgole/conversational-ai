@@ -5,6 +5,7 @@
 <style>
 /* Layout from Figma "Table" (1828:12487): 200px product nav | 200px chat history | thread + composer, 550px column. */
 :root {
+  color-scheme: light;
   --bg: #F9FAFB; --surface: #FFFFFF; --surface-2: #F2F4F7; --line: #E4E7EC; --line-2: #F2F4F7; --line-strong: #D0D5DD;
   --fg: #1D2939; --fg-2: #475467; --fg-3: #667085; --fg-4: #98A2B3;
   --accent: #7F56D9; --accent-strong: #6941C6; --accent-soft: #F4EBFF; --accent-line: #E9D7FE; --accent-mid: #9E77ED;
@@ -18,17 +19,8 @@
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --col: 550px;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0C111D; --surface: #161B26; --surface-2: #1F242F; --line: #2A303C; --line-2: #222833; --line-strong: #333A47;
-  --fg: #F5F5F6; --fg-2: #CECFD2; --fg-3: #94969C; --fg-4: #6B6F78;
-  --accent: #9E77ED; --accent-strong: #B692F6; --accent-soft: #2C1C5F; --accent-line: #53389E; --accent-mid: #9E77ED;
-  --bubble: #2A303C; --send-off: #333A47; --spark: #FDB022;
-  --nav: #0A0D14; --nav-2: #161B26; --nav-3: #2A303C;
-  --bad: #F97066; --bad-soft: #3E1A17; --note: #2B2210; --note-line: #B54708; --note-fg: #FEDF89;
-  --code-bg: #0C111D; --k: #B692F6; --s: #47CD89; --c: #6B6F78;
-  --shadow-sm: 0 4px 8px -2px rgba(0,0,0,.4), 0 2px 4px -2px rgba(0,0,0,.3); --tab-shadow: 0 2px 4px rgba(0,0,0,.4);
-  color-scheme: dark } }
-:root[data-theme="dark"] {
+
+:root[data-mode="dark"] {
   --bg: #0C111D; --surface: #161B26; --surface-2: #1F242F; --line: #2A303C; --line-2: #222833; --line-strong: #333A47;
   --fg: #F5F5F6; --fg-2: #CECFD2; --fg-3: #94969C; --fg-4: #6B6F78;
   --accent: #9E77ED; --accent-strong: #B692F6; --accent-soft: #2C1C5F; --accent-line: #53389E; --accent-mid: #9E77ED;
@@ -418,8 +410,8 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 
 /* ---------- logo (1X mark is white; darken it on light surfaces) ---------- */
 :root { --logo-filter: invert(1) brightness(.15); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --logo-filter: none; } }
-:root[data-theme="dark"] { --logo-filter: none; }
+
+:root[data-mode="dark"] { --logo-filter: none; }
 .brand .logo { width: 28px; height: 28px; display: block; }
 .brand.sm .logo { width: 24px; height: 24px; filter: var(--logo-filter); }
 
@@ -482,9 +474,9 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .cert, .uncert { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
 .cert { background: #ECFDF3; color: #067647; }
 .uncert { background: #FFFAEB; color: #B54708; }
-:root[data-theme="dark"] .cert { background: #053321; color: #75E0A7; }
-:root[data-theme="dark"] .uncert { background: #4E1D09; color: #FEC84B; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cert { background: #053321; color: #75E0A7; } :root:not([data-theme="light"]) .uncert { background: #4E1D09; color: #FEC84B; } }
+:root[data-mode="dark"] .cert { background: #053321; color: #75E0A7; }
+:root[data-mode="dark"] .uncert { background: #4E1D09; color: #FEC84B; }
+
 
 .sql-link { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-size: 13px; font-weight: 500; color: var(--fg-2); padding-top: 12px; border-top: 1px solid var(--line-2); width: 100%; }
 .sql-link:hover { color: var(--accent-strong); }
@@ -523,8 +515,8 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 
 /* ---------- charts: type picker + forms ---------- */
 :root { --cat-1: #2a78d6; --cat-2: #eb6834; --cat-3: #1baf7a; --cat-4: #eda100; --cat-5: #e87ba4; --cat-6: #008300; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; --cat-5: #d55181; --cat-6: #008300; } }
-:root[data-theme="dark"] { --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; --cat-5: #d55181; --cat-6: #008300; }
+
+:root[data-mode="dark"] { --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; --cat-5: #d55181; --cat-6: #008300; }
 .main .chart { gap: 14px; }
 .main .chart-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; }
 .chart-title { display: flex; align-items: baseline; gap: 10px; font-size: 13px; font-weight: 600; color: var(--fg-2); }
@@ -599,7 +591,7 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .brand { justify-content: space-between; gap: 8px; }
 .nav-toggle { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; color: #98A2B3; flex: none; }
 .nav-toggle:hover { background: var(--nav-2); color: var(--nav-hi); }
-.nav.min { width: 68px; padding: 20px 12px; }
+.nav.min { width: 44px; padding: 20px 12px; }
 .nav.min .brand { flex-direction: column; height: auto; gap: 14px; padding: 0; margin-bottom: 0; }
 .nav.min .nav-label, .nav.min .ws-name, .nav.min .nav-group, .nav.min .trial svg:last-child { display: none; }
 .nav.min .ws { justify-content: center; padding: 6px; }
@@ -1085,6 +1077,8 @@ const P = {
   expand: "M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7",
   list: "M8 6h12M8 12h12M8 18h12M4 6v.01M4 12v.01M4 18v.01",
   check: "M5 12l5 5 9-10",
+  sun: "M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zM12 2.5v2M12 19.5v2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M2.5 12h2M19.5 12h2M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4",
+  moon: "M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10z",
   panelClose: "M4 5h16v14H4zM9.5 5v14M15.5 9.5L13 12l2.5 2.5",
   panelOpen: "M4 5h16v14H4zM9.5 5v14M13 9.5l2.5 2.5-2.5 2.5",
   lock: "M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3",
@@ -1108,13 +1102,16 @@ const Logo = () => html`<img className="logo" src=${LOGO_PNG} width="28" height=
 /* ---------- designer's notes ---------- */
 const NotesCtx = React.createContext({ on: false });
 const NOTE_TOTAL = 10;
-function NotePop({ n, title, children, onClose, onGo, anchor }) {
+function NotePop({ n, title, children, onClose, onGo }) {
   const ref = useRef(null);
   const [pos, setPos] = useState(null);
+  const tries = useRef(0);
   const place = () => {
-    const at = anchor && anchor.current, el = ref.current;
-    if (!at || !el || !at.getBoundingClientRect) return;
+    const at = document.querySelector('.hs[data-hs="' + n + '"]'), el = ref.current;
+    if (!at || !el || !at.getBoundingClientRect) { if (tries.current++ < 20) requestAnimationFrame(place); return; }
     const r = at.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, vw = window.innerWidth, vh = window.innerHeight, m = 12;
+    const box = at.closest(".thread, .composer-wrap"), cr = box ? box.getBoundingClientRect() : { top: 0, bottom: vh };
+    if (r.bottom < cr.top || r.top > cr.bottom) { setPos(p => p && p.hidden ? p : { ...(p || { left: 0, top: 0 }), hidden: true }); return; }
     const left = Math.max(m, Math.min(r.left + r.width / 2 - w / 2, vw - w - m));
     let top = r.bottom + 8;
     if (top + h > vh - m && r.top - 8 - h > m) top = r.top - 8 - h;
@@ -1127,7 +1124,7 @@ function NotePop({ n, title, children, onClose, onGo, anchor }) {
     return () => { window.removeEventListener("resize", f); window.removeEventListener("scroll", f, true); };
   }, []);
   const node = html`<span ref=${ref} className="hs-pop" role="dialog" aria-label=${"Design decision " + n}
-      style=${pos ? { left: pos.left + "px", top: pos.top + "px" } : { left: "0px", top: "0px", visibility: "hidden" }}>
+      style=${pos && !pos.hidden ? { left: pos.left + "px", top: pos.top + "px" } : { left: (pos ? pos.left : 0) + "px", top: (pos ? pos.top : 0) + "px", visibility: "hidden" }}>
     <span className="hs-pop-top"><span className="hs-eyebrow">Design decision ${n} of ${NOTE_TOTAL}</span>
       <span className="hs-nav">
         <button type="button" className="hs-btn" onClick=${() => onGo(+n - 1)} disabled=${+n <= 1} aria-label="Previous design decision" title="Previous (←)"><${Icon} n="chevL" s=${14} /></button>
@@ -1145,10 +1142,10 @@ function Note({ n, title, children }) {
   const ctx = React.useContext(NotesCtx);
   if (!ctx || !ctx.on) return null;
   const open = ctx.openId === n;
-  return html`<span className="hs" data-hs=${n} ref=${ctx.anchorRef && open ? ctx.anchorRef : null}>
+  return html`<span className="hs" data-hs=${n}>
     <button type="button" className=${"hs-dot" + (open ? " open" : "")} aria-expanded=${open} aria-label=${"See design decision " + n}
       onClick=${e => { e.preventDefault(); e.stopPropagation(); ctx.setOpenId(open ? null : n); }}><span className="hs-tip" aria-hidden="true">See design decision</span></button>
-    ${open && html`<${NotePop} n=${n} title=${title} onClose=${() => ctx.setOpenId(null)} onGo=${ctx.goTo} anchor=${ctx.anchorRef}>${children}<//>`}
+    ${open && html`<${NotePop} n=${n} title=${title} onClose=${() => ctx.setOpenId(null)} onGo=${ctx.goTo}>${children}<//>`}
   </span>`;
 }
 
@@ -1772,11 +1769,12 @@ function App() {
   const [msgs, setMsgs] = useState(() => seedConversation());
   const [input, setInput] = useState("");
   const [notes, setNotes] = useState(false);
+  const [mode, setMode] = useState(() => { try { return localStorage.getItem("color-mode") === "dark" ? "dark" : "light"; } catch (e) { return "light"; } });
+  useEffect(() => { document.documentElement.setAttribute("data-mode", mode); try { localStorage.setItem("color-mode", mode); } catch (e) {} }, [mode]);
   const [navMin, setNavMin] = useState(() => { try { return localStorage.getItem("nav-collapsed") === "1"; } catch (e) { return false; } });
   const toggleNav = () => setNavMin(v => { try { localStorage.setItem("nav-collapsed", v ? "0" : "1"); } catch (e) {} return !v; });
   const [openNote, setOpenNote] = useState(null);
   const [howToken, setHowToken] = useState(0);
-  const noteAnchor = useRef(null);
   useEffect(() => {
     if (!openNote) return;
     const down = e => { if (!e.target.closest || !e.target.closest(".hs, .hs-pop")) setOpenNote(null); };
@@ -1960,7 +1958,7 @@ function App() {
   const firstAnswerId = (msgs.find(m => m.result && m.result.kind === "answer" && m.status !== "thinking") || {}).id;
   const flaggedQs = msgs.map((m, i) => m.flagged ? msgs[i - 1].text : null).filter(Boolean);
 
-  return html`<${NotesCtx.Provider} value=${{ on: notes, openId: openNote, setOpenId: setOpenNote, goTo: goToDecision, anchorRef: noteAnchor }}>
+  return html`<${NotesCtx.Provider} value=${{ on: notes, openId: openNote, setOpenId: setOpenNote, goTo: goToDecision }}>
   <div className="app">
     <nav className=${"nav" + (navMin ? " min" : "")} aria-label="Product">
       <div className="nav-top">
@@ -1988,6 +1986,7 @@ function App() {
           <button className="icon-btn show-sm" onClick=${newChat} aria-label="New chat" title="New chat"><${Icon} n="plus" /></button>
           <button className="ghost-btn" onClick=${() => setDataOpen(true)}><${Icon} n="db" s=${15} /><span className="hide-sm">View data</span></button>
           <label className="switch"><input id="notes-toggle" type="checkbox" checked=${notes} onChange=${e => { setNotes(e.target.checked); setOpenNote(null); }} /><span className="track"><span className="knob"></span></span><span><span className="hide-sm">See design </span>decisions</span></label>
+          <button type="button" className="icon-btn mode-btn" onClick=${() => setMode(mode === "dark" ? "light" : "dark")} aria-label=${mode === "dark" ? "Switch to light mode" : "Switch to dark mode"} title=${mode === "dark" ? "Light mode" : "Dark mode"} aria-pressed=${mode === "dark"}><${Icon} n=${mode === "dark" ? "sun" : "moon"} s=${18} /></button>
         </div>
       </header>
 
